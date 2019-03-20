@@ -1,3 +1,37 @@
 languageCode = "en-us"
-title = "smyachenkov tech blog"
-theme = "ananke"
+title = "smyachenkov"
+theme = "whiteplain"
+googleAnalytics = "UA-136218929-1"
+
+[taxonomies]
+  category = "categories"
+  tag = "tags"
+  series = "series"
+
+[params.author]
+  name = "Stanislav Myachenkov"
+  instagram = "flslkxtc"
+  linkedin = "stanislav-myachenkov-560a2678"
+  github = "smyachenkov"
+  foursquare = "flslkxtc"
+  telegram = "smyachenkov"
+  avatar = "avatar.jpg"
+
+# Header Menu
+[[menu.main]]
+  name = "Tags"
+  identifier = "tags"
+  url = "/tags/"
+  weight = 1
+[[menu.main]]
+  name = "About Me"
+  identifier = "about"
+  url = "/about/"
+  weight = 2
+
+# Footer Menu
+[[menu.footer]]
+  name = "About Me"
+  weight = 1
+  identifier = "about me"
+  url = "/about/"
