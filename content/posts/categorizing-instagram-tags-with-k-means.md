@@ -246,7 +246,7 @@ In this post we've found the way of grouping instagram tags from a set of instag
 
 You can find working demo here: https://github.com/smyachenkov/k-means_tags_demo
 
-I left behind some of the topics, for example choosing k-means parameters like number of categories and number of tags in a single category. I will cover this topics in the next posts.
+I left behind some of the topics, for example choosing k-means parameters like number of categories and number of tags in a single category. I will cover those topics in the next posts.
 
 In conclusion I want to say that exploring new content can be very fun and some categories have huge amount of awesome content. You can use this knowledge to find new ways to find new people, place your content into right category or to be inspired by something new. 
 
