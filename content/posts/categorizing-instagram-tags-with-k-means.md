@@ -150,7 +150,7 @@ model = KMeans(
 groups = model.fit_predict(data)
 ```
 
-`groups` is an array with a size of initial `data` array 6. And it contains groups ids for entries in `data` in the same order:
+`groups` is an array with the same size as initial `data` array — 6. And it contains groups ids for entries in `data` in the same order:
 ```
 post 0: 0
 post 1: 0
@@ -242,12 +242,12 @@ This human-readable name can help us quickly understand what this group is about
 
 ## Result
 
-In this post we've found the way to group instagram tags from a set of instagram posts into a thematic categories.
+In this post we've found the way of grouping instagram tags from a set of instagram posts into a thematic categories.
 
 You can find working demo here: https://github.com/smyachenkov/k-means_tags_demo
 
 I left behind some of the topics, for example choosing k-means parameters like number of categories and number of tags in a single category. I will cover this topics in the next posts.
 
-In conclusion I would like to say that exploring new content can be very fun and some categories have huge amount of awesome content. You can use this knowledge to find new ways to find new people, place your content into right category or to be inspired by something new. 
+In conclusion I want to say that exploring new content can be very fun and some categories have huge amount of awesome content. You can use this knowledge to find new ways to find new people, place your content into right category or to be inspired by something new. 
 
 Keep expressing yourself!
