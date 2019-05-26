@@ -5,6 +5,9 @@ baseURL = 'http://smyachenkov.com/'
 googleAnalytics = "UA-136218929-1"
 enableRobotsTXT = true
 
+PygmentsCodeFences = true
+PygmentsStyle = "tango"
+
 [taxonomies]
   category = "categories"
   tag = "tags"
