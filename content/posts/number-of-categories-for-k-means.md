@@ -8,11 +8,11 @@ tags: [machine learning, categorization, k-means]
 [**K-Means**](https://wikipedia.org/wiki/K-means_clustering) is a very common and powerful clusterization algorithm widely used in an [unsupervised machine learning](https://wikipedia.org/wiki/Unsupervised_learning) tasks for dividing data into categories.
 The only decision you have to make is the number of clusters you want your data to be divided into — _k_ number.
 
-Sometimes you already know how many categories you want to have. It depends a lot on a type of problem, your data, and the problems you are solving. For example, if you want to divide the dataset of people's measurements into t-shirt sizes, you already know that there are t-shirts measured from XXS to XXL and you can say with confidence that you know how much categories your data will have.
+Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving. For example, if you want to divide the dataset of people's measurements into t-shirt sizes, you already know that t-shirts are measured from XXS to XXL and you can say with confidence that you know how many categories your data will have.
 
-But often we face another type of a problem — when you don't know the categories number and you want to find it. One example of this problem is the categorization of social media hashtags. [In my previous post](http://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/), you can read more about it.
+But often we face another type of a problem — when you don't know the number of categories and you want to find it. One example of this problem is categorization of social media hashtags. [In my previous post](http://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/), you can read more about it.
 
-There are a lot of methods of finding optimal categories number in a dataset and I will stop on 2 most popular for the K-Means algorithm: [Elbow](https://wikipedia.org/wiki/Elbow_method_(clustering)) and [Silhouette](https://wikipedia.org/wiki/Silhouette_(clustering)) methods.
+There are a lot of methods of finding optimal number of categories in a dataset, and I will focus on the 2 most popular for the K-Means algorithm: the [Elbow](https://wikipedia.org/wiki/Elbow_method_(clustering)) and the [Silhouette](https://wikipedia.org/wiki/Silhouette_(clustering)) methods.
 
 ## Dataset
 
@@ -44,9 +44,9 @@ Lets try it!
 
 ## Elbow method
 
-The general idea for both methods is to try different values for _k_ number and measure some metric. In the elbow method, it's the sum of squared distances of an object to the closest centroid.
+The general idea for both methods is to try different values for _k_ number and measure some of its metrics. In the elbow method, it's the sum of the squared distances of an object to the closest centroid.
 
-Let's measure how different will performance params will be for the number of categories from 1 to 20.
+Let's measure how different the performance params will be for the number of categories from 1 to 20.
 ``` python
 with open("posts.txt", encoding="utf-8") as inp:
     posts = inp.readlines()
@@ -54,7 +54,7 @@ vectorizer = TfidfVectorizer(use_idf=True)
 posts_coordinates = vectorizer.fit_transform(posts)
 print("Number of clusters / Inertia / Diff")
 previous = 0
-for clusters_amount in range(range_min, range_max + 1, step):
+for clusters_amount in range(1, 21, step):
     model = KMeans(
         n_clusters=clusters_amount,
         init='k-means++',
@@ -66,7 +66,7 @@ for clusters_amount in range(range_min, range_max + 1, step):
     inertia = model.inertia_
     diff = previous - inertia
     previous = inertia
-    print("%s: %s %s" % (clusters_amount, inertia, "" if clusters_amount == 1 else diff))
+    print("%s: %s %s" % (clusters_amount, inertia, "-" if clusters_amount == 1 else diff))
 ```
 
 This script gives us the following data where **Categories** column is the number of categories, **Inertia** is the sum of squared distances to the closest centroid, and **Diff** is the difference between current and previous values of Inertia:
@@ -97,14 +97,14 @@ Categories  Inertia Diff
 ![Elbow chart](/images/2_number-of-categories-for-k-means/elbow_chart.png)
 ![Elbow diff chart](/images/2_number-of-categories-for-k-means/elbow_diff_chart.png)
 
-Here we can see that the Inertia parameter almost stops decreasing after the number of categories reaches **8**. It's even more clear on a second diagram, where the largest drop in speed  is achieved at **8** categories and every difference after that does not change much.
+Here we can see that the Inertia parameter almost stops decreasing after the number of categories reaches **8**. It's even more clear on the second diagram, where the largest drop in speed has been achieved after the **8**th category and every difference after that does not change much.
 
 Now let's try to confirm this number with a silhouette method.
 
 
 ## Silhouette method
 
-Silhouette metric has its values in a range from -1 to 1 and measures how far or close are points in clusters to points of another cluster. The higher the value — the further points of clusters are from each other. And that's what we want to achieve — more distinct clusters that do not intersect.
+Silhouette metric has its values in a range from -1 to 1 and measures how far or close are points in clusters to points of another cluster. The higher the value — the farther points of clusters are from each other. And that's what we want to achieve — more distinct clusters that do not intersect.
 
 ``` python
 with open("posts.txt", encoding="utf-8") as inp:
@@ -112,7 +112,7 @@ with open("posts.txt", encoding="utf-8") as inp:
 vectorizer = TfidfVectorizer(use_idf=True)
 posts_coordinates = vectorizer.fit_transform(posts)
 print("Number of clusters / Silhouette score")
-for clusters_amount in range(range_min, range_max + 1, step):
+for clusters_amount in range(2, 21, step):
     model = KMeans(
         n_clusters=clusters_amount,
         init='k-means++',
@@ -153,11 +153,11 @@ Categories Silhouette score
 
 ![Silhouette chart](/images/2_number-of-categories-for-k-means/silhouette.png)
 
-The highest score is achieved with **8** categories, the same number as we got using the elbow method.
+The highest score is achieved in **8** categories, the same number as the one we got using the elbow method.
 
 ## Conclusion
 
-Choosing the correct and optimal number of categories is a very frequent problem in unsupervised machine learning and data clustering. Sometimes you can make a very good assumption by just looking at your data and studying its domain. But if you want to adjust this number to be more precise or find order in chaotic data it's good to test different metrics and see what insides on your data they do provide. In this post, I have tried only two methods for one problem, but there are a lot more. Don't be afraid to try something new!
+Choosing the correct and optimal number of categories is a very frequent problem in unsupervised machine learning and data clustering. Sometimes you can make a fairly good assumption by just looking at your data and studying its domain. But if you want to adjust this number to be more precise or find order in chaotic data it's good to test different metrics and see what insights about your data they provide. In this post, I have tried only two methods for one problem, but there are many more. Don't be afraid to try something new!
 
 ## Links
 
