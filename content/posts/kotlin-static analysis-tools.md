@@ -1,7 +1,7 @@
 ---
 title: "Kotlin Static Analysis Tools"
 date: 2019-06-16T00:00:00+03:00
-draft: true
+draft: false
 tags: [programming, kotlin]
 ---
 
