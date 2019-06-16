@@ -284,6 +284,8 @@ There is a couple of Kotlin-specific things you have to keep in mind:
 
 2. Add Kotlin dependency to plugin.xml `<depends>org.jetbrains.kotlin</depends>`
 
+AbstractKotlinInspection implementations share a similar approach with detekt rules: you have a lot of functions, that visit only specific language elements.
+
 ``` Kotlin
 class CustomInspection : AbstractKotlinInspection() {
     override fun buildVisitor(
@@ -303,6 +305,8 @@ class CustomInspection : AbstractKotlinInspection() {
     }
 }
 ```
+
+Now let's implement our FunctionNameLength rule.
 
 ``` Kotlin
 private const val MAX_LENGTH = 20
