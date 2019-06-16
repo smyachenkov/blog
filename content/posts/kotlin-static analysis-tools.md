@@ -262,7 +262,7 @@ In this part, I will show you ways to use IDEA inspections as a part of a projec
 
 ### Inspections as a part of the build
 
-If you ever used IDEA, you are familiar with its inspections suggesting improvements in the text editor. It's a big list of known and popular bugs, code smells, style suggestions and best practices for many languages. Right now there are more than 100 Kotlin inspections [bundled in](https://github.com/JetBrains/kotlin/tree/master/idea/src/org/jetbrains/kotlin/idea/inspections) Kotlin plugin for IntelliJ IDEA. Sometimes you wonder — why am I skipping all that pile of knowledge when it can be included in my build or pipeline and prevent so many problems? Well, there are a couple of ways to it
+If you ever used IDEA, you are familiar with its inspections suggesting improvements in the text editor. It's a big list of known and popular bugs, code smells, style suggestions and best practices for many languages. Right now there are more than 100 Kotlin inspections [bundled in](https://github.com/JetBrains/kotlin/tree/master/idea/src/org/jetbrains/kotlin/idea/inspections) Kotlin plugin for IntelliJ IDEA. Sometimes you wonder — why am I skipping all that pile of knowledge when it can be included in my build or pipeline and prevent so many problems? There are a couple of ways to it
 
 First, IDEA comes with a built-in [command line inspection tool](https://www.jetbrains.com/help/idea/command-line-code-inspector.html). It requires installed IDEA instance, so if you want to go this way — my suggestion is to build a Docker image with installed IntelliJ IDEA in your pipeline and run your project inside this image.
 
