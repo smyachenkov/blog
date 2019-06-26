@@ -5,15 +5,15 @@ draft: false
 tags: [programming, kotlin]
 ---
 
-[Kotlin](https://kotlinlang.org/) did an amazing job saving and including into its scope most of all valuable Java libraries, frameworks, and tools. But there is one type of a tool that can't be easily imported and reused — [static code analyzers](https://wikipedia.org/wiki/Static_program_analysis). Java developers implemented a lot of tools for code analysis, if you worked with Java you might be familiar with some of the following projects: [PMD](https://pmd.github.io/), [checkstyle](http://checkstyle.sourceforge.net/), [findbugs](http://findbugs.sourceforge.net/), [spotbugs](https://spotbugs.github.io/), etc. Sadly, those projeсts cannot be reused for different languages with different syntax and rules, such as Kotlin.  
+[Kotlin](https://kotlinlang.org/) did an amazing job saving and including into its scope most of all valuable Java libraries, frameworks, and tools. But there is one type of tool that can't be easily imported and reused — [static code analyzers](https://wikipedia.org/wiki/Static_program_analysis). Java developers have implemented a lot of tools for code analysis, therefore, if you have worked with Java you might be familiar with some of the following projects: [PMD](https://pmd.github.io/), [checkstyle](http://checkstyle.sourceforge.net/), [findbugs](http://findbugs.sourceforge.net/), [spotbugs](https://spotbugs.github.io/), etc. Sadly, these projeсts cannot be reused in other languages with different syntax and rules, such as Kotlin.  
 
 ## Why do we need static analyzers
 
-JetBrains Team suggests to use built-in inspections and rules in IntelliJ IDEA, but relying only on an IDE is not enough. It might be sufficient for very small projects with a single contributor, but it's definitely not enough for huge projects that require teamwork and multiple contributors. Your team members are not perfect and can forget to fix inspection or leave it intentionally because they don't want to spend time on it. For those reasons we need tools that can be triggered on a build and fail pipelines, protecting your project codebase from bugged and unreadable code. 
+JetBrains Team suggests using built-in inspections and rules in IntelliJ IDEA, but relying only on an IDE is not enough. It might be sufficient for very small projects with a single contributor, but it's definitely not enough for huge projects that require teamwork and multiple contributors. Your team members are not perfect and can forget to fix inspection or ignore it intentionally because they don't want to spend time on it. For these reasons we need tools that can be triggered on a build and fail pipelines to protect your project codebase from bugged and unreadable code. 
 
 ![DevOps Cycle](/images/3_kotlin_static_analysis_tools/devops_cycle.png)
 
-In the CI/CD cycle, static analyzers are located in the TEST stage and check, if new builds have errors, vulnerabilities, or if the number of code smells or potential bugs exceeds some threshold.
+In the CI/CD cycle, static analyzers are located in the TEST stage and check if new builds have errors, vulnerabilities, or if the number of code smells or potential bugs exceed some threshold.
 
 In this post, I will take a look at popular tools for code analysis and implement custom rules for them.
 
@@ -21,12 +21,12 @@ Let's see what Kotlin infrastructure has to offer.
 
 ## ktlint
 
-[ktlint](https://ktlint.github.io/) is a very powerful Kotlin static analyzer. It can be run as a command line tool, as a Gradle task, or as a maven plugin.
-It's a simple and reliable tool, and I won't stop here for a long time, because ktlint documentation contains all the code samples required for successful ktlint integration.
+[ktlint](https://ktlint.github.io/) is a very powerful Kotlin static analyzer. It can be run as a command line tool, as a Gradle task, or as a Maven plugin.
+It's a simple and reliable tool, and I won't dwell on this subject, because ktlint documentation contains all the code samples required for successful ktlint integration.
 
-The subject I want to focus on more is the creation of custom rules and rulesets.
+The subject I want to focus on is creation of custom rules and rulesets.
 
-All the code analyzers use the same pattern — visitor for all the elements of an [abstract syntax tree](https://wikipedia.org/wiki/Abstract_syntax_tree). And every rule makes a stop at every element of this tree: import directives, functions, constructors, method calls, arguments lists — every language element. 
+All the code analyzers use the same pattern — a visitor for all the elements of an [abstract syntax tree](https://wikipedia.org/wiki/Abstract_syntax_tree). And every rule makes a stop at every element of this tree such as: import directives, functions, constructors, method calls, arguments lists — every language element. 
 
 ``` Kotlin
 class CustomRule: Rule("custom-rule") {
@@ -77,7 +77,7 @@ class FunctionNameLength : Rule("function-name-length") {
 
 And that's almost all the code you have to write!
 
-To complete the project, you need to implement your `RuleSetProvider` class, where you specify all the rules, that your ruleset contains:
+To complete this project, you need to implement your `RuleSetProvider` class where you specify all the ruleSetId that your ruleset contains:
 
 ``` Kotlin
 class CustomRuleSetProvider : RuleSetProvider {
@@ -88,7 +88,7 @@ class CustomRuleSetProvider : RuleSetProvider {
 }
 ```
 
-Also, you need to create a service file *com.pinterest.ktlint.core.RuleSetProvider* in project's META_INF directory /resources/META-INF/services/. The content of this file should be the full name of your RuleSetProvider class, for example, com.mycustomruleset.CustomRuleSetProvider.
+Also, you need to create a service file *com.pinterest.ktlint.core.RuleSetProvider* in the project's META_INF directory /resources/META-INF/services/. The content of this file should be the full name of your RuleSetProvider class, for example, com.mycustomruleset.CustomRuleSetProvider.
 
 You can build this project using Gradle with a couple of dependencies: 
 
@@ -121,15 +121,15 @@ src/
         FunctionNameLength.kt
 build.gradle
 ```
-Here you can find the working example of a custom ktlint rule implementation: https://github.com/smyachenkov/kt-ruleset/tree/master/ktlint-rules.
+Here you can find a working example of a custom ktlint rule implementation: https://github.com/smyachenkov/kt-ruleset/tree/master/ktlint-rules.
 
 ## detekt
 
-[detekt](https://github.com/arturbosch/detekt) is very similar to ktlint. It can be used as a build stage or as the [ruleset for SonarQube](https://github.com/arturbosch/sonar-kotlin).
+[detekt](https://github.com/arturbosch/detekt) is very similar to ktlint. It can be used as a build stage or as a [ruleset for SonarQube](https://github.com/arturbosch/sonar-kotlin).
 
-There is a little difference between ktlint and detekt approaches. ktlint is focused on a minimalistic default configuration — you just can run the ktlint command without any arguments. The rationale of such an approach is to not spend your valuable time on tools configuration and focus more on the code of your project. On the other side, detekt makes it a lot easier to configure long and complex rulesets, rule inclusion, properties, weights, thresholds, etc. All this configuration can be set in [YAML config file](https://arturbosch.github.io/detekt/configurations.html).
+There is a little difference between ktlint and detekt approaches. ktlint is focused on a minimalistic default configuration — you can just run the ktlint command without any arguments. The rationale for such approach is to not spend your valuable time on tools configuration and rather focus on the code of your project. On the other side, detekt makes it a lot easier to configure long and complex rulesets, rule inclusion, properties, weights, thresholds, etc. All of this configuration can be set in [YAML config file](https://arturbosch.github.io/detekt/configurations.html).
 
-The main difference between the implementation of ktlint and detekt rules is that ktlint makes you manually check every element of an AST, while detekt provides you a big number of visit methods, that visit only specific language elements, such as constructor, import directives, named functions, lambdas, etc.
+The main difference between the implementation of ktlint and detekt rules is that ktlint requires you to manually check every element of an AST, while detekt provides you with a large number of visit methods that visit only specific language elements, such as constructor, import directives, named functions, lambdas, etc.
 
 ``` Kotlin
 class CustomRule(config: Config = Config.empty) : Rule(config) {
@@ -169,7 +169,7 @@ class CustomRule(config: Config = Config.empty) : Rule(config) {
 }
 ```
 
-Otherwise, both projects are pretty similar, and it won't cost you much to implement the same rule for both ktlint and detekt. 
+Otherwise, both projects are pretty similar, and it won't take you much effort to implement the same rule for both ktlint and detekt. 
 
 Let's implement our FunctionNameLength rule.
 
@@ -256,27 +256,27 @@ Here you can find an example of the custom detekt rule implementation: https://g
 
 ## IntelliJ IDEA
 
-[IntelliJ IDEA](https://www.jetbrains.com/idea/), flagship JetBrains product, it has so much awesome and useful features, that you can discover new ways to code better again and again even if you are already doing it for years. 
+[IntelliJ IDEA](https://www.jetbrains.com/idea/), a flagship JetBrains product has so many awesome and useful features, that you can discover new ways to code better again and again even if you are already have been doing it for years. 
 
-In this part, I will show you ways to use IDEA inspections as a part of a project build or CI stage.
+In this part, I will show you the ways to use IDEA inspections as a part of a project build or CI stage.
 
 ### Inspections as a part of the build
 
-If you ever used IDEA, you are familiar with its inspections suggesting improvements in the text editor. It's a big list of known and popular bugs, code smells, style suggestions and best practices for many languages. Right now there are more than 100 Kotlin inspections [bundled in](https://github.com/JetBrains/kotlin/tree/master/idea/src/org/jetbrains/kotlin/idea/inspections) Kotlin plugin for IntelliJ IDEA. Sometimes you wonder — why am I skipping all that pile of knowledge when it can be included in my build or pipeline and prevent so many problems? There are a couple of ways to do it.
+If you have ever used IDEA, you are familiar with its inspections that suggest improvements in the text editor. It's a big list of known and popular bugs, code smells, style suggestions and best practices for many languages. Right now there are more than 100 Kotlin inspections [bundled in](https://github.com/JetBrains/kotlin/tree/master/idea/src/org/jetbrains/kotlin/idea/inspections) Kotlin plugin for IntelliJ IDEA. Sometimes you may wonder — why am I skipping all that pile of knowledge when it can be included in my build or pipeline and prevent so many problems? There are a couple of ways to do it.
 
-First, IDEA comes with a built-in [command line inspection tool](https://www.jetbrains.com/help/idea/command-line-code-inspector.html). It requires installed IDEA instance, so if you want to go this way — my suggestion is to build a Docker image with installed IntelliJ IDEA in your pipeline and run your project inside this image.
+First, IDEA comes with a built-in [command line inspection tool](https://www.jetbrains.com/help/idea/command-line-code-inspector.html). It requires an installed IDEA instance, so if you want to go this way — my suggestion is to build a Docker image with installed IntelliJ IDEA in your pipeline and run your project inside this image.
 
-Second, there exist [inspection-plugin](https://github.com/JetBrains/inspection-plugin/), that allows you to run IDEA inspections as a part of Gradle build. Right now this project is still in beta version and frozen, so it's not the best solution for a reliable pipeline, but I hope its development will continue.
+Second, there is [inspection-plugin](https://github.com/JetBrains/inspection-plugin/), that allows you to run IDEA inspections as a part of Gradle build. Right now this project is still in beta version and frozen, so it's not the best solution for a reliable pipeline, but I hope its development will continue.
 
 ### Custom inspections
 
-If you ever tried to create custom inspection for Java in IntelliJ IDEA  you might be familiar with the [structural search](https://www.jetbrains.com/help/idea/structural-search-and-replace.html). It allows you to search elements of code and [create custom inspections](https://www.jetbrains.com/help/idea/creating-custom-inspections.html). It's a pretty easy and quick way to implement new rules.
+If you have ever tried creating custom inspection for Java in IntelliJ IDEA  you might be familiar with [structural search](https://www.jetbrains.com/help/idea/structural-search-and-replace.html). It allows you to search for elements of code and [create custom inspections](https://www.jetbrains.com/help/idea/creating-custom-inspections.html). It's a pretty easy and quick way to implement new rules.
 
 Unfortunately, the structural search is currently not available for Kotlin language — https://youtrack.jetbrains.com/issue/KT-10176.
 
 ![Sad Keanu](/images/3_kotlin_static_analysis_tools/sad_keanu.jpg)
 
-But if you really do want a new inspection, it won't stop you, because it can be implemented via the [IDEA inspection plugin](https://www.jetbrains.org/intellij/sdk/docs/tutorials/code_inspections.html). If you ever have written IDEA plugins, this should be familiar to this type of project, if you didn't do that — it's not that hard, and JetBrains documentation provides good examples. 
+But if you really do want a new inspection, it won't stop you, because it can be implemented via the [IDEA inspection plugin](https://www.jetbrains.org/intellij/sdk/docs/tutorials/code_inspections.html). If you ever have written IDEA plugins, this should be similar to this type of project, if you didn't do that — it's not that hard, and JetBrains documentation provides good examples. 
 
 There is a couple of Kotlin-specific things you have to keep in mind:  
 
@@ -382,9 +382,9 @@ Here you can find a full working example of the IDEA inspection plugin for Kotli
 
 ## Conclusion
 
-If you want to see all the inspection from this post in action, [here](https://github.com/smyachenkov/kt-ruleset/tree/master/demo) you can find the sample project, that uses custom ktlint and detekt ruleset.
+If you want to see all the inspection from this post in action, [here](https://github.com/smyachenkov/kt-ruleset/tree/master/demo) you can find a sample project that uses custom ktlint and detekt ruleset.
 
-Static code analysis is an important part of a project builds or pipelines and you don't have to lose it because you switched from Java to Kotlin. There are various configurable and extendable tools to it, such as the ktlint or detekt project. Besides those tools, JetBrains IDE's are very powerful providers of programming language code styles. Right now, adding a new rule or including all IDE's inspections into your pipeline is possible, but can be tricky and it's easier to do it with another tool. Given the growing Kotlin popularity in the last years, we should expect static analyzers for Kotlin to continue to improve and become even better.
+Static code analysis is an important part of a project builds or pipelines and you don't have to lose it after you switched from Java to Kotlin. There are various configurable and extendable tools for this, such as ktlint and detekt projects. Besides these tools, JetBrains IDE's are very powerful providers of programming language code styles. Right now, adding a new rule or including all IDE's inspections into your pipeline is possible, but can be tricky and it's easier to do it with another tool. Given the growing Kotlin popularity in the last years, we should expect static analyzers for Kotlin to continue improving and become even better.
 
 
 ## Links 
