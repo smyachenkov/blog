@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>Number of Categories for K-Means: Elbow and Silhouette Methods - smyachenkov</title>
+  <meta property="og:title" content="Number of Categories for K-Means: Elbow and Silhouette Methods - smyachenkov" />
+  <meta name="twitter:title" content="Number of Categories for K-Means: Elbow and Silhouette Methods - …" />
+  <meta name="description" content="K-Means is a very common and powerful clusterization algorithm widely used in an unsupervised machine learning tasks for dividing data into categories. The only decision you have to make is the number of clusters you want your data to be divided into — k number.
+Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving.">
+  <meta property="og:description" content="K-Means is a very common and powerful clusterization algorithm widely used in an unsupervised machine learning tasks for dividing data into categories. The only decision you have to make is the number of clusters you want your data to be divided into — k number.
+Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving.">
+  <meta name="twitter:description" content="K-Means is a very common and powerful clusterization algorithm widely used in an unsupervised machine learning tasks for dividing data into categories. The only decision you have to make is the number …">
+  <meta name="author" content="Stanislav Myachenkov"/>
+  <meta property="og:site_name" content="smyachenkov" />
+  <meta property="og:url" content="http://smyachenkov.com/posts/number-of-categories-for-k-means/" />
+  <meta property="og:type" content="article" />
+  <meta name="twitter:card" content="summary" />
+  <meta name="generator" content="Hugo 0.55.6" />
+
+  <link rel="stylesheet" href="/css/style.css" media="all" />
+  <link rel="stylesheet" href="/css/syntax.css" media="all" />
+  <link rel="stylesheet" href="/css/custom.css" media="all" />
+
+  <script src="/js/script.js"></script>
+  <script src="/js/custom.js"></script>
+  <script defer src="/js/fontawesome.js"></script>
+</head>
+
+<body>
+
+<header class="site-header">
+  <nav class="site-navi">
+    <h1 class="site-title"><a href="/">smyachenkov</a></h1>
+    <ul class="site-navi-items">
+      <li class="site-navi-item-tags"><a href="/tags/" title="Tags">Tags</a></li>
+      <li class="site-navi-item-about"><a href="/about/" title="About Me">About Me</a></li>
+    </ul>
+  </nav>
+</header>
+<hr class="site-header-bottom">
+
+  <div class="main" role="main">
+    <article class="article">
+      
+      
+      <h1 class="article-title">Number of Categories for K-Means: Elbow and Silhouette Methods</h1>
+      
+      <hr class="article-title-bottom">
+      <ul class="article-meta">
+        <li class="article-meta-date"><time>May 26, 2019</time></li>
+        <li class="article-meta-tags">
+          <a href="/tags/machine-learning/">
+            <i class="fas fa-tag"></i>
+            machine learning
+          </a>&nbsp;
+        </li>
+        <li class="article-meta-tags">
+          <a href="/tags/categorization/">
+            <i class="fas fa-tag"></i>
+            categorization
+          </a>&nbsp;
+        </li>
+        <li class="article-meta-tags">
+          <a href="/tags/k-means/">
+            <i class="fas fa-tag"></i>
+            k-means
+          </a>&nbsp;
+        </li>
+      </ul>
+      
+<aside class="toc">
+  <nav id="TableOfContents">
+<ul>
+<li>
+<ul>
+<li><a href="#dataset">Dataset</a></li>
+<li><a href="#elbow-method">Elbow method</a></li>
+<li><a href="#silhouette-method">Silhouette method</a></li>
+<li><a href="#conclusion">Conclusion</a></li>
+<li><a href="#links">Links</a></li>
+</ul></li>
+</ul>
+</nav>
+</aside>
+      
+
+<p><a href="https://wikipedia.org/wiki/K-means_clustering"><strong>K-Means</strong></a> is a very common and powerful clusterization algorithm widely used in an <a href="https://wikipedia.org/wiki/Unsupervised_learning">unsupervised machine learning</a> tasks for dividing data into categories.
+The only decision you have to make is the number of clusters you want your data to be divided into — <em>k</em> number.</p>
+
+<p>Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving. For example, if you want to divide the dataset of people&rsquo;s measurements into t-shirt sizes, you already know that t-shirts are measured from XXS to XXL and you can say with confidence that you know how many categories your data will have.</p>
+
+<p>But often we face another type of a problem — when you don&rsquo;t know the number of categories and you want to find it. One example of this problem is categorization of social media hashtags. <a href="http://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/">In my previous post</a>, you can read more about it.</p>
+
+<p>There are a lot of methods of finding optimal number of categories in a dataset, and I will focus on the 2 most popular for the K-Means algorithm: the <a href="https://wikipedia.org/wiki/Elbow_method_(clustering)">Elbow</a> and the <a href="https://wikipedia.org/wiki/Silhouette_(clustering)">Silhouette</a> methods.</p>
+
+<h2 id="dataset">Dataset</h2>
+
+<p>I will test both methods on a small synthetic <a href="https://raw.githubusercontent.com/smyachenkov/clustering_categories_number_demo/master/posts.txt">dataset</a> of Instagram posts with 50 entries. It contains 50 entries with 8 groups of 5 posts from different categories plus 2 groups of 5 posts from mixed categories.</p>
+
+<pre><code>{camping, mothernature, hike, earth, rain, wildlife, landscapestyles, naturewalk, natureonly}
+...
+{streetview, streetphotographers, streetclassics, street_photo_club, streetphotographers}
+...
+{architecture, archilovers, architecture_hunter, architecturelovers, creative_architecture}
+...
+{ireland, dublin, guinness, instaireland, discoverireland}
+...
+{ocean, sand, ocean, water, waves, seaside, wave}
+...
+{portrait_shots, portrait_mood, portraitsociety, portraitvision, portraitoftheday, portraitmode}
+...
+{ireland, dublin, guinness, instaireland, discoverireland, camping, mothernature, hike, earth, rain}
+...
+{catsofinstagram, cat, cats, cats_of_instagram, catoftheday, petstagram, catsagram}
+...
+{minimal_perfection, minimalmood, minimalistic, minimalismo, minimal, minimalism_world}
+...
+{architecture, archilovers, creative_architecture, minimalmood, minimalistic, minimal}
+</code></pre>
+
+<p>Lets try it!</p>
+
+<h2 id="elbow-method">Elbow method</h2>
+
+<p>The general idea for both methods is to try different values for <em>k</em> number and measure some of its metrics. In the elbow method, it&rsquo;s the sum of the squared distances of an object to the closest centroid.</p>
+
+<p>Let&rsquo;s measure how different the performance params will be for the number of categories from 1 to 20.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#204a87;font-weight:bold">with</span> <span style="color:#204a87">open</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;posts.txt&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">encoding</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;utf-8&#34;</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">as</span> <span style="color:#000">inp</span><span style="color:#000;font-weight:bold">:</span>
+    <span style="color:#000">posts</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">inp</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">readlines</span><span style="color:#000;font-weight:bold">()</span>
+<span style="color:#000">vectorizer</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">TfidfVectorizer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">use_idf</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#3465a4">True</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#000">posts_coordinates</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">vectorizer</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">fit_transform</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">posts</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;Number of clusters / Inertia / Diff&#34;</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#000">previous</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#0000cf;font-weight:bold">0</span>
+<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">clusters_amount</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#204a87">range</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">1</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">21</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">step</span><span style="color:#000;font-weight:bold">):</span>
+    <span style="color:#000">model</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">KMeans</span><span style="color:#000;font-weight:bold">(</span>
+        <span style="color:#000">n_clusters</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">clusters_amount</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">init</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;k-means++&#39;</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">max_iter</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">10</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">n_init</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">verbose</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#3465a4">False</span>
+    <span style="color:#000;font-weight:bold">)</span>
+    <span style="color:#000">model</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">fit_predict</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">posts_coordinates</span><span style="color:#000;font-weight:bold">)</span>
+    <span style="color:#000">inertia</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">model</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">inertia_</span>
+    <span style="color:#000">diff</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">previous</span> <span style="color:#ce5c00;font-weight:bold">-</span> <span style="color:#000">inertia</span>
+    <span style="color:#000">previous</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">inertia</span>
+    <span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;</span><span style="color:#4e9a06">%s</span><span style="color:#4e9a06">: </span><span style="color:#4e9a06">%s</span><span style="color:#4e9a06"> </span><span style="color:#4e9a06">%s</span><span style="color:#4e9a06">&#34;</span> <span style="color:#ce5c00;font-weight:bold">%</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#000">clusters_amount</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">inertia</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#4e9a06">&#34;-&#34;</span> <span style="color:#204a87;font-weight:bold">if</span> <span style="color:#000">clusters_amount</span> <span style="color:#ce5c00;font-weight:bold">==</span> <span style="color:#0000cf;font-weight:bold">1</span> <span style="color:#204a87;font-weight:bold">else</span> <span style="color:#000">diff</span><span style="color:#000;font-weight:bold">))</span></code></pre></div>
+<p>This script gives us the following data where <strong>Categories</strong> column is the number of categories, <strong>Inertia</strong> is the sum of squared distances to the closest centroid, and <strong>Diff</strong> is the difference between current and previous values of Inertia:</p>
+
+<pre><code>Categories  Inertia Diff
+1           43,56   -
+2           37,13   6,43
+3           31,82   5,30
+4           26,74   5,08
+5           21,82   4,92
+6           17,93   3,88
+7           12,74   5,19
+8           9,07    3,66
+9           7,74    1,33
+10          6,57    1,16
+11          5,99    0,57
+12          5,76    0,23
+13          5,54    0,21
+14          5,31    0,22
+15          5,10    0,21
+16          4,86    0,23
+17          4,64    0,22
+18          4,56    0,08
+19          4,25    0,30
+20          4,05    0,20
+</code></pre>
+
+<p><img src="/images/2_number-of-categories-for-k-means/elbow_chart.png" alt="Elbow chart" />
+<img src="/images/2_number-of-categories-for-k-means/elbow_diff_chart.png" alt="Elbow diff chart" /></p>
+
+<p>Here we can see that the Inertia parameter almost stops decreasing after the number of categories reaches <strong>8</strong>. It&rsquo;s even more clear on the second diagram, where the largest drop in speed has been achieved after the <strong>8</strong>th category and every difference after that does not change much.</p>
+
+<p>Now let&rsquo;s try to confirm this number with a silhouette method.</p>
+
+<h2 id="silhouette-method">Silhouette method</h2>
+
+<p>Silhouette metric has its values in a range from -1 to 1 and measures how far or close are points in clusters to points of another cluster. The higher the value — the farther points of clusters are from each other. And that&rsquo;s what we want to achieve — more distinct clusters that do not intersect.</p>
+<div class="highlight"><pre style="background-color:#f8f8f8;-moz-tab-size:4;-o-tab-size:4;tab-size:4"><code class="language-python" data-lang="python"><span style="color:#204a87;font-weight:bold">with</span> <span style="color:#204a87">open</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;posts.txt&#34;</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">encoding</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#34;utf-8&#34;</span><span style="color:#000;font-weight:bold">)</span> <span style="color:#204a87;font-weight:bold">as</span> <span style="color:#000">inp</span><span style="color:#000;font-weight:bold">:</span>
+    <span style="color:#000">posts</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">inp</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">readlines</span><span style="color:#000;font-weight:bold">()</span>
+<span style="color:#000">vectorizer</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">TfidfVectorizer</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">use_idf</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#3465a4">True</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#000">posts_coordinates</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">vectorizer</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">fit_transform</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">posts</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;Number of clusters / Silhouette score&#34;</span><span style="color:#000;font-weight:bold">)</span>
+<span style="color:#204a87;font-weight:bold">for</span> <span style="color:#000">clusters_amount</span> <span style="color:#204a87;font-weight:bold">in</span> <span style="color:#204a87">range</span><span style="color:#000;font-weight:bold">(</span><span style="color:#0000cf;font-weight:bold">2</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#0000cf;font-weight:bold">21</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">step</span><span style="color:#000;font-weight:bold">):</span>
+    <span style="color:#000">model</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">KMeans</span><span style="color:#000;font-weight:bold">(</span>
+        <span style="color:#000">n_clusters</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#000">clusters_amount</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">init</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#4e9a06">&#39;k-means++&#39;</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">max_iter</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">10</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">n_init</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#0000cf;font-weight:bold">5</span><span style="color:#000;font-weight:bold">,</span>
+        <span style="color:#000">verbose</span><span style="color:#ce5c00;font-weight:bold">=</span><span style="color:#3465a4">False</span>
+    <span style="color:#000;font-weight:bold">)</span>
+    <span style="color:#000">categories</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">model</span><span style="color:#ce5c00;font-weight:bold">.</span><span style="color:#000">fit_predict</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">posts_coordinates</span><span style="color:#000;font-weight:bold">)</span>
+    <span style="color:#000">silhouette_avg</span> <span style="color:#ce5c00;font-weight:bold">=</span> <span style="color:#000">silhouette_score</span><span style="color:#000;font-weight:bold">(</span><span style="color:#000">posts_coordinates</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">categories</span><span style="color:#000;font-weight:bold">)</span>
+    <span style="color:#204a87;font-weight:bold">print</span><span style="color:#000;font-weight:bold">(</span><span style="color:#4e9a06">&#34;</span><span style="color:#4e9a06">%s</span><span style="color:#4e9a06">: </span><span style="color:#4e9a06">%s</span><span style="color:#4e9a06">&#34;</span> <span style="color:#ce5c00;font-weight:bold">%</span> <span style="color:#000;font-weight:bold">(</span><span style="color:#000">clusters_amount</span><span style="color:#000;font-weight:bold">,</span> <span style="color:#000">silhouette_avg</span><span style="color:#000;font-weight:bold">))</span></code></pre></div>
+<p>This script gives us the following data:</p>
+
+<pre><code>Categories Silhouette score
+2          0,13
+3          0,23
+4          0,29
+5          0,35
+6          0,41
+7          0,48
+8          0,51
+9          0,50
+10         0,48
+11         0,47
+12         0,45
+13         0,43
+14         0,41
+15         0,39
+16         0,39
+17         0,37
+18         0,39
+19         0,34
+20         0,34
+</code></pre>
+
+<p><img src="/images/2_number-of-categories-for-k-means/silhouette.png" alt="Silhouette chart" /></p>
+
+<p>The highest score is achieved in <strong>8</strong> categories, the same number as the one we got using the elbow method.</p>
+
+<h2 id="conclusion">Conclusion</h2>
+
+<p>Choosing the correct and optimal number of categories is a very frequent problem in unsupervised machine learning and data clustering. Sometimes you can make a fairly good assumption by just looking at your data and studying its domain. But if you want to adjust this number to be more precise or find order in chaotic data it&rsquo;s good to test different metrics and see what insights about your data they provide. In this post, I have tried only two methods for one problem, but there are many more. Don&rsquo;t be afraid to try something new!</p>
+
+<h2 id="links">Links</h2>
+
+<p>Scripts and dataset from this post: <a href="https://github.com/smyachenkov/clustering_categories_number_demo">https://github.com/smyachenkov/clustering_categories_number_demo</a></p>
+
+<p>Elbow method description: <a href="https://wikipedia.org/wiki/Elbow_method_(clustering">https://wikipedia.org/wiki/Elbow_method_(clustering</a>)</p>
+
+<p>Silhouette method description: <a href="https://wikipedia.org/wiki/Silhouette_(clustering))">https://wikipedia.org/wiki/Silhouette_(clustering))</a></p>
+
+<p>Problem of choosing number of clusters in a dataset: <a href="https://wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set">https://wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set</a></p>
+
+<p>K-Means implementation in scikit-learn library: <a href="https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html">https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html</a></p>
+
+<p>Silhouette metric implementation in scikit-learn library: <a href="https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html">https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html</a></p>
+
+    </article>
+
+    
+<ul class="article-share">
+  <li>
+    <a href="https://twitter.com/share" class="twitter-share-button">Tweet</a> <script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0],p=/^http:/.test(d.location)?'http':'https';if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src=p+'://platform.twitter.com/widgets.js';fjs.parentNode.insertBefore(js,fjs);}}(document, 'script', 'twitter-wjs');</script>
+  </li>
+  <li>
+    <div class="fb-share-button" data-href="http://smyachenkov.com/posts/number-of-categories-for-k-means/" data-layout="button_count" data-action="like" data-size="small" data-show-faces="true" data-share="true"></div>
+    <div id="fb-root"></div>
+    <script>(function(d, s, id) {
+      var js, fjs = d.getElementsByTagName(s)[0];
+      if (d.getElementById(id)) return;
+      js = d.createElement(s); js.id = id;
+      js.src = "//connect.facebook.net/en_US/sdk.js#xfbml=1&version=v2.10";
+      fjs.parentNode.insertBefore(js, fjs);
+    }(document, 'script', 'facebook-jssdk'));</script>
+  </li>
+</ul>
+
+
+    <ul class="pager article-pager">
+      <li class="pager-newer">
+          <a href="/posts/kotlin-static-analysis-tools/" data-toggle="tooltip" data-placement="top" title="Kotlin Static Analysis Tools">&lt; Newer</a>
+      </li>
+      <li class="pager-older">
+        <a href="/posts/categorizing-instagram-tags-with-k-means/" data-toggle="tooltip" data-placement="top" title="Categorizing Instagram Tags with K-Means">Older &gt;</a>
+      </li>
+    </ul>
+  </div>
+
+
+<div class="site-footer">
+  <div class="copyright"></div>
+  <ul class="site-footer-items">
+    <li class="site-footer-item-about me"><a href="/about/" title="About Me">About Me</a></li>
+  </ul>
+  <div class="powerdby">
+    Powered by <a href="https://gohugo.io/">Hugo</a> and <a href="https://github.com/taikii/whiteplain">Whiteplain</a>
+  </div>
+</div>
+
+<script type="application/javascript">
+var doNotTrack = false;
+if (!doNotTrack) {
+	(function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+	(i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+	m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+	})(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+	ga('create', 'UA-136218929-1', 'auto');
+	
+	ga('send', 'pageview');
+}
+</script>
+
+
+</body>
+</html>

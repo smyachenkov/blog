@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes" ?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>smyachenkov</title>
+    <link>http://smyachenkov.com/</link>
+    <description>Recent content on smyachenkov</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sun, 16 Jun 2019 00:00:00 +0300</lastBuildDate>
+    
+	<atom:link href="http://smyachenkov.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    <item>
+      <title>Kotlin Static Analysis Tools</title>
+      <link>http://smyachenkov.com/posts/kotlin-static-analysis-tools/</link>
+      <pubDate>Sun, 16 Jun 2019 00:00:00 +0300</pubDate>
+      
+      <guid>http://smyachenkov.com/posts/kotlin-static-analysis-tools/</guid>
+      <description>Kotlin did an amazing job saving and including into its scope most of all valuable Java libraries, frameworks, and tools. But there is one type of tool that can&amp;rsquo;t be easily imported and reused — static code analyzers. Java developers have implemented a lot of tools for code analysis, therefore, if you have worked with Java you might be familiar with some of the following projects: PMD, checkstyle, findbugs, spotbugs, etc.</description>
+    </item>
+    
+    <item>
+      <title>Number of Categories for K-Means: Elbow and Silhouette Methods</title>
+      <link>http://smyachenkov.com/posts/number-of-categories-for-k-means/</link>
+      <pubDate>Sun, 26 May 2019 00:00:00 +0300</pubDate>
+      
+      <guid>http://smyachenkov.com/posts/number-of-categories-for-k-means/</guid>
+      <description>K-Means is a very common and powerful clusterization algorithm widely used in an unsupervised machine learning tasks for dividing data into categories. The only decision you have to make is the number of clusters you want your data to be divided into — k number.
+Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving.</description>
+    </item>
+    
+    <item>
+      <title>Categorizing Instagram Tags with K-Means</title>
+      <link>http://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/</link>
+      <pubDate>Sun, 24 Mar 2019 00:00:00 +0300</pubDate>
+      
+      <guid>http://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/</guid>
+      <description>Over the last couple of years Instagram, Facebook and many other social media have gotten rid of the chronological order in their post feed. While frustrating at first, this decision encouraged one part of social media that I like most of all: your content can be seen, discovered and rated not only by your friends and followers, but also by many other new people. To make your content discoverable you can use features such as hashtags, geolocations, tagging other people and so on.</description>
+    </item>
+    
+  </channel>
+</rss>
