@@ -5,9 +5,7 @@ draft: false
 tags: [programming, java, maven, flyway]
 ---
 
-## What is Flyway
-
-[Flyway](https://flywaydb.org/) is a database migration management tool, which allows you to deliver and validate changes of the database. It's a powerful tool with a lot of useful features, but my favorite use-case is an ability to use Flyway migrations as part of an application. You can execute migrations when application starts, having your DB updated and application deployed in one seamless process. Also, it stimulates you to store migrations code very close to code of your application - in the same project. 
+[Flyway](https://flywaydb.org/) is a database migration management tool, which allows you to deliver and validate changes of the database. It's a powerful tool with a lot of useful features, but my favorite use-case is an ability to use Flyway migrations as part of an application. You can execute migrations when application starts, having your DB updated and application deployed in one seamless process. Also, it stimulates you to store migrations code very close to code of your application — in the same project. 
 
 ## Common migrations for multiple applications
 
@@ -32,7 +30,7 @@ Now those files can be found using classpath.
 
 For example, let's implement this approach using Spring Boot
 
-Let's say we have two modules - `first` and `second`, which require common migrations, and module `commonmigrations` which contains said migrations.
+Let's say we have two modules — `first` and `second`, which require common migrations, and module `commonmigrations` which contains said migrations.
 
 First, we need to create parent pom:
 ```xml
