@@ -24,7 +24,7 @@ In this post, I will try to answer the question: why do we feel weird about tech
 
 ![Cat dog](/images/5_cognitive_biases_development/cat_dog.jpg#center)
 
-Humans like patterns. And I am not even talking only about programming or system design right now. Patterns are everywhere in the life of any person. Patterns save us a lot of time by providing a working solution for a familiar task. You don't recreate the process of brushing your teeth and taking a shower in the mourning, as well as you don't put many thoughts into writing simple [CRUD](https://wikipedia.org/wiki/Create,_read,_update_and_delete) application.
+Humans like patterns. And I am not even talking only about programming or system design right now. Patterns are everywhere in the life of any person. Patterns save us a lot of time by providing a working solution for a familiar task. You don't recreate the process of brushing your teeth and taking a shower in the morning, as well as you don't put many thoughts into writing simple [CRUD](https://wikipedia.org/wiki/Create,_read,_update_and_delete) application.
 
 Patterns of thinking are the main principle of many puzzles and riddles, such as [Bat and ball price](https://wikipedia.org/wiki/Cognitive_reflection_test#Test_questions_and_answers) or [Monty Hall Problem](https://wikipedia.org/wiki/Monty_Hall_problem).
 
