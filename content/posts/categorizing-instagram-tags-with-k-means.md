@@ -3,6 +3,7 @@ title: "Categorizing Instagram Tags with K-Means"
 date: 2019-03-24T00:00:00+03:00
 draft: false
 tags: [machine learning, categorization, k-means, instagram]
+description: "Choose a perfect tags for Instagram with machine learning."
 ---
 Over the last couple of years Instagram, Facebook and many other social media have gotten rid of the chronological order in their post feed. While frustrating at first, this decision encouraged one part of social media that I like most of all: your content can be seen, discovered and rated not only by your friends and followers, but also by many other new people. To make your content discoverable you can use features such as hashtags, geolocations, tagging other people and so on.
 
@@ -87,7 +88,7 @@ As you can see, this dataset has 3 unique hashtags: <u>#italy</u>, <u>#food</u>,
 
 Now we need to put our posts into this 3-D tag space. We will calculate dimension values for every post using [**td-idf**](https://wikipedia.org/wiki/Tf–idf) metric. This metric shows how important a word is in a document, in our case it measures the impact of a single tag for a post. It means that tags with very low or very high frequency will be assigned a lower rank. 
 
-```
+```python
 vectorizer = TfidfVectorizer()
 posts_coordinates = vectorizer.fit_transform(posts)	
 print(posts_coordinates)
@@ -122,20 +123,20 @@ Let's see how it works on the example.
  
 1. In this image the gray squares are training examples and the colored circles are initial centroids. All the centroids are initialized with random coordinates, the training examples are not clustered.  
 ![K-Means step 1](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_1.svg)  
-<sup><sup><sup><sup>By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463053<sup><sup><sup><sup>
+<div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463053</div>
 2. Here all the training examples are assigned to the closest centroid and marked with the centroid's color  
 ![K-Means step 2](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_2.svg)  
-<sup><sup><sup><sup>By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463076<sup><sup><sup><sup>
+<div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463076</div>
 3. Now we need to calculate new centroids for the groups created in step 2. This is achieved by calculating centers of mass for each training example belonging to a group  
 ![K-Means step 3](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_3.svg)  
-<sup><sup><sup><sup>By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463081<sup><sup><sup><sup>
+<div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463081</div>
 4. Clusterization by distance from newly created centroid is repeated and if we see that there are no more iterations required we can stop the algorithm and call this clusterization final  
 ![K-Means step 4](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_4.svg)  
-<sup><sup><sup><sup>By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463085<sup><sup><sup><sup>
+<div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463085</div>
 
 Now we are going to apply k-means clusterization to our dataset of posts about Italy. By looking at it, we can tell that there are 2 groups: food and architecture. So our _k_-parameter(the number of clusters we are going to divide our group into) will be 2.
 
-```
+```python
 KMEANS_CLUSTERS = 2
 ...
 model = KMeans(
@@ -164,7 +165,7 @@ Our dataset was successfully divided into two groups: 0 —  "food" and 1 —  "
 
 Lets see where the centroids are located.
 
-```
+```python
 centroids = model.cluster_centers_
 ```
 
@@ -185,7 +186,7 @@ Imagine that we have many more tags, let's say 10,000. We would not be intereste
 
 Let's get back to our example. We are going to limit the number of tags in each category by two and pick the two most meaningful tags.
 
-```
+```python
 TAGS_IN_CATEGORY = 2
 ...
 ordered_centroids = model.cluster_centers_.argsort()[:, ::-1]	

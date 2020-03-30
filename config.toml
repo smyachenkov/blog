@@ -1,42 +1,62 @@
 languageCode = "en-us"
-title = "smyachenkov"
-theme = "whiteplain"
+title = "Stanislav Myachenkov"
+theme = "ezhil"
 baseURL = 'http://smyachenkov.com/'
 googleAnalytics = "UA-136218929-1"
 enableRobotsTXT = true
+disqusShortname = "smyachenkov"
+showShareIcons = true
+paginate = 5
 
 PygmentsCodeFences = true
 PygmentsStyle = "tango"
 
-[taxonomies]
-  category = "categories"
-  tag = "tags"
-  series = "series"
+[params]
+  subtitle = "Notes about programming, software engineering and computer science."
+  featherIconsCDN = true
+  mode = "auto"
+  disableDisqusTypes = ["page"]
 
-[params.author]
-  name = "Stanislav Myachenkov"
-  instagram = "s.myachenkov"
-  linkedin = "stanislav-myachenkov-560a2678"
-  github = "smyachenkov"
-  foursquare = "flslkxtc"
-  telegram = "smyachenkov"
-  avatar = "avatar.jpg"
+[taxonomies]
+  tag = "tags"
+
+[[params.social]]
+  name = "Telegram"
+  icon = "send"
+  url = "https://t.me/smyachenkov"
+
+[[params.social]]
+  name = "Github"
+  icon = "github"
+  url = "https://github.com/smyachenkov/"
+
+[[params.social]]
+  name = "Instagram"
+  icon = "instagram"
+  url = "https://www.instagram.com/s.myachenkov/"
+
+[[params.social]]
+  name = "Linked"
+  icon = "linkedin"
+  url = "https://www.linkedin.com/in/stanislav-myachenkov-560a2678/"
 
 # Header Menu
 [[menu.main]]
-  name = "Tags"
-  identifier = "tags"
-  url = "/tags/"
-  weight = 1
-[[menu.main]]
-  name = "About Me"
-  identifier = "about"
-  url = "/about/"
-  weight = 2
+name = "Home"
+url = "/"
+weight = 1
 
-# Footer Menu
-[[menu.footer]]
-  name = "About Me"
-  weight = 1
-  identifier = "about me"
-  url = "/about/"
+[[menu.main]]
+name = "All posts"
+url = "/posts"
+weight = 2
+
+[[menu.main]]
+name = "About"
+url = "/about"
+weight = 3
+
+[[menu.main]]
+name = "Tags"
+url = "/tags"
+weight = 4

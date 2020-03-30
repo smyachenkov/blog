@@ -3,6 +3,7 @@ title: "Flyway Migrations in Multi-Module Maven Projects"
 date: 2020-01-24T00:00:00+03:00
 draft: false
 tags: [programming, java, maven, flyway]
+description: "Single migration set for multiple projects."
 ---
 
 [Flyway](https://flywaydb.org/) is a database migration management tool, which allows you to deliver and validate changes of the database. It's a powerful tool with a lot of useful features, but my favorite use-case is an ability to use Flyway migrations as part of an application. You can execute migrations when application starts, having your DB updated and application deployed in one seamless process. Also, it stimulates you to store migrations code very close to code of your application — in the same project. 

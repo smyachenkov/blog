@@ -3,6 +3,7 @@ title: "Kotlin Static Analysis Tools"
 date: 2019-06-16T00:00:00+03:00
 draft: false
 tags: [programming, kotlin]
+description: "How to use and extend Kotlin static analyzers."
 ---
 
 [Kotlin](https://kotlinlang.org/) did an amazing job saving and including into its scope most of all valuable Java libraries, frameworks, and tools. But there is one type of tool that can't be easily imported and reused — [static code analyzers](https://wikipedia.org/wiki/Static_program_analysis). Java developers have implemented a lot of tools for code analysis, therefore, if you have worked with Java you might be familiar with some of the following projects: [PMD](https://pmd.github.io/), [checkstyle](http://checkstyle.sourceforge.net/), [findbugs](http://findbugs.sourceforge.net/), [spotbugs](https://spotbugs.github.io/), etc. Sadly, these projeсts cannot be reused in other languages with different syntax and rules, such as Kotlin.  
