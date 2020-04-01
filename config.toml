@@ -41,7 +41,7 @@ PygmentsStyle = "tango"
   url = "https://www.instagram.com/s.myachenkov/"
 
 [[params.social]]
-  name = "Linked"
+  name = "LinkedIn"
   icon = "linkedin"
   url = "https://www.linkedin.com/in/stanislav-myachenkov-560a2678/"
 
