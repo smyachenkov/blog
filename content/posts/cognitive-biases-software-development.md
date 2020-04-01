@@ -84,7 +84,7 @@ When your project grows, it can reach a point where you forget the exact details
 
 A complex system can not be easily extended without affecting its other parts. Most of us saw some good old-fashioned spaghetti code, that covered a lot of conditions and was very hard to read. Fixing bugs or adding new features in such code can result in a [Hydra Code](https://blog.codinghorror.com/new-programming-jargon/) — the situation when fixing one of the problems results in breaking other functions or new bugs. And leaving the system in this state will surely not make further development easy. 
 
-Take a look at the [test-driven development in Oracle Database](https://news.ycombinator.com/item?id=18442637) story. Sure, high test coverage and TDD practices can help to manage code quality, but if your project will fall apart when you remove long and complex tests and pipelines – this project is not an easy one to maintain and understand.
+Take a look at the [test-driven development in Oracle Database](https://news.ycombinator.com/item?id=18442941) story. Sure, high test coverage and TDD practices can help to manage code quality, but if your project will fall apart when you remove long and complex tests and pipelines – this project is not an easy one to maintain and understand.
 
 # Instagram effect
 
