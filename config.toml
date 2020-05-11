@@ -8,8 +8,9 @@ disqusShortname = "smyachenkov"
 showShareIcons = true
 paginate = 5
 
-PygmentsCodeFences = true
-PygmentsStyle = "tango"
+pygmentsstyle = "pastie"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
 
 [params]
   subtitle = "Notes about programming, software engineering and computer science."
