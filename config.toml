@@ -17,6 +17,8 @@ pygmentscodefencesguesssyntax = true
   featherIconsCDN = true
   mode = "auto"
   disableDisqusTypes = ["page"]
+  customCSS  = "css/links.css"
+  customDarkCSS = "css/links-dark.css"
 
 [taxonomies]
   tag = "tags"
