@@ -46,7 +46,7 @@ pygmentscodefencesguesssyntax = true
 [[params.social]]
   name = "LinkedIn"
   icon = "linkedin"
-  url = "https://www.linkedin.com/in/stanislav-myachenkov-560a2678/"
+  url = "https://www.linkedin.com/in/stanislav-myachenkov/"
 
 # Header Menu
 [[menu.main]]
