@@ -3,7 +3,7 @@ title: "Code Presentation Tips"
 date: 2020-08-11T00:00:00+03:00
 draft: false
 tags: [programming]
-description: "How to make the code in slides look better."
+description: "How to make code in slides look better."
 ---
 
 Sometimes, I need to show some code in my slides. It can be an internal presentation for 3-5 developers, an online meetup, or a live event. And many times, I have found myself trying to recover the lost code style configuration or to recreate a color palette from the previous presentation.
@@ -41,7 +41,7 @@ Those are my favorite tools to create a formatted and visually appealing piece o
 
 Prepare and save the configuration for your editor.
 
-It is possible to import and export code style configurations for IntelliJ Idea. For convenience, I store them in GitHub repository: [Idea Config](https://github.com/smyachenkov/code-slides-config/tree/master/idea). You can apply this code style configuration in `Settings -> Editor -> Code Style -> Scheme -> Import Scheme -> IntelliJ IDEA code style XML` and selecting your config file. The same menu allows you to export the current scheme. Create your config, save it in a repository, and use it when you need to have your code style in IDE.
+It is possible to import and export code style configurations for IntelliJ Idea. For convenience, I store them in GitHub repository: [Idea Config](https://github.com/smyachenkov/code-slides-config/tree/master/idea). You can apply this code style configuration in `Settings → Editor → Code Style → Scheme → Import Scheme → IntelliJ IDEA code style XML` and selecting your config file. The same menu allows you to export the current scheme. Create your config, save it in a repository, and use it when you need to have your code style in IDE.
 
 Also, I store color schemes for [Carbon](https://carbon.now.sh/). Carbon has many ready-to-use themes, but you can customize and share your configurations. You can find my configs and instructions on how to apply them here: [Carbon Config](https://github.com/smyachenkov/code-slides-config/tree/master/carbon).
 
