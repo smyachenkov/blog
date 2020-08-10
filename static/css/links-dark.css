@@ -1,0 +1,9 @@
+.title, .title:hover {
+    text-decoration: underline;
+    word-break: break-word;
+}
+
+a, a:hover {
+    text-decoration: underline;
+    word-break: break-word;
+}
