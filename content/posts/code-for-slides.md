@@ -80,6 +80,6 @@ Remember that simplicity is achieved not when there is nothing to add, but when 
 
 # Useful Links
 
-Carbon code image share tool - https://carbon.now.sh/.
+Carbon code image share tool — https://carbon.now.sh/.
 
-Codestyle templates - https://github.com/smyachenkov/code-slides-config.
+Codestyle templates — https://github.com/smyachenkov/code-slides-config.
