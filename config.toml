@@ -1,7 +1,7 @@
 languageCode = "en-us"
 title = "Stanislav Myachenkov"
 theme = "ezhil"
-baseURL = 'http://smyachenkov.com/'
+baseURL = 'https://smyachenkov.com/'
 googleAnalytics = "UA-136218929-1"
 enableRobotsTXT = true
 disqusShortname = "smyachenkov"
