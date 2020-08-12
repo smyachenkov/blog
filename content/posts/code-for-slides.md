@@ -34,8 +34,8 @@ Those are my favorite tools to create a formatted and visually appealing piece o
 
 # Prepare Format & Highlight Presets
 
-![No Highlight](/images/6_code_presentation/highlight_1.png#center)
-![Highlight](/images/6_code_presentation/highlight_2.png#center)
+![No Highlight](/images/6_code_presentation/highlight_off.png#center)
+![Highlight](/images/6_code_presentation/highlight_on.png#center)
 
 <div style="text-align: center; font-size:0.8em; font-style: italic;">Turn on the light</div>
 
@@ -47,7 +47,7 @@ Also, I store color schemes for [Carbon](https://carbon.now.sh/). Carbon has man
 
 # Have Dark And Light Presets
 
-![Dark and Light](/images/6_code_presentation/color.png#center)
+![Dark and Light](/images/6_code_presentation/colors.png#center)
 <div style="text-align: center; font-size:0.8em; font-style: italic;">Both will come in handy</div>
 
 Create presets for both light and dark environments.
@@ -56,8 +56,8 @@ I like the white code on a dark background, and usually, I use this theme for pe
  
 # Choose Suitable Language
 
-![Java](/images/6_code_presentation/lang_1.png#center)
-![Scala](/images/6_code_presentation/lang_2.png#center)
+![Java](/images/6_code_presentation/lang_java.png#center)
+![Scala](/images/6_code_presentation/lang_scala.png#center)
 
 <div style="text-align: center; font-size:0.8em; font-style: italic;">Some languages have more expressive options</div>
 
