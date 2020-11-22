@@ -3,10 +3,9 @@ title: "How To Compare JSON Documents In Java"
 date: 2020-06-10T00:00:00+03:00
 draft: false
 tags: [programming, java]
-description: "Calculating difference between JSON objects."
 ---
 
-Sometimes we want to know the difference between 2 or more JSON documents. We may want to do it to display the history of edits of the document to review, validate, and have a chance to roll back these changes.
+Lets think about a task, where we want to know the difference between 2 or more JSON documents. We may want to do it to display the history of edits of the document to review, validate, and have a chance to roll back these changes.
 
 For example, if we have two documents describing the movie Titanic:
 

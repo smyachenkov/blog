@@ -1,70 +1,63 @@
-languageCode = "en-us"
+languageCode = "en"
 title = "Stanislav Myachenkov"
-theme = "ezhil"
+theme = "hugo-kiera"
 baseURL = 'https://smyachenkov.com/'
 googleAnalytics = "UA-136218929-1"
 enableRobotsTXT = true
+enableEmoji = true
 disqusShortname = "smyachenkov"
 showShareIcons = true
+enableGitInfo = true
 paginate = 5
+summaryLength = 30
 
-pygmentsstyle = "pastie"
+pygmentsstyle = "dracula"
+pygmentsuseclasses = false
 pygmentscodefences = true
 pygmentscodefencesguesssyntax = true
 
+[author]
+    name = "Stanislav Myachenkov"
+    github = "smyachenkov"
+    linkedin = "stanislav-myachenkov"
+    instagram = "s.myachenkov" 
+    email = "mailto:s.myachenkov@gmail.com"
+    telegram = "smyachenkov"
+
+# https://gohugo.io/news/0.60.0-relnotes/
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.renderer]
+      unsafe = true
+
 [params]
-  subtitle = "Notes about programming, software engineering and computer science."
+  tagline = "Notes about programming and dev culture."
   featherIconsCDN = true
   mode = "auto"
   disableDisqusTypes = ["page"]
-  customCSS  = "css/links.css"
-  customDarkCSS = "css/links-dark.css"
+  customCSS  = ["css/links.css"]
+  customDarkCSS = ["css/links-dark.css"]
 
 [taxonomies]
   tag = "tags"
 
-[[params.social]]
-  name = "Email"
-  icon = "mail"
-  url = "mailto:s.myachenkov@gmail.com"
-
-[[params.social]]
-  name = "Telegram"
-  icon = "send"
-  url = "https://t.me/smyachenkov"
-
-[[params.social]]
-  name = "Github"
-  icon = "github"
-  url = "https://github.com/smyachenkov/"
-
-[[params.social]]
-  name = "Instagram"
-  icon = "instagram"
-  url = "https://www.instagram.com/s.myachenkov/"
-
-[[params.social]]
-  name = "LinkedIn"
-  icon = "linkedin"
-  url = "https://www.linkedin.com/in/stanislav-myachenkov/"
-
 # Header Menu
 [[menu.main]]
-name = "Home"
+name = "Posts"
 url = "/"
 weight = 1
 
+#[[menu.main]]
+#name = "All posts"
+#url = "/posts"
+#weight = 2
+
 [[menu.main]]
-name = "All posts"
-url = "/posts"
+name = "Tags"
+url = "/tags"
 weight = 2
 
 [[menu.main]]
 name = "About"
 url = "/about"
 weight = 3
-
-[[menu.main]]
-name = "Tags"
-url = "/tags"
-weight = 4

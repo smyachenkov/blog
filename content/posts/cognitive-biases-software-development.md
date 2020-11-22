@@ -3,7 +3,6 @@ title: "Cognitive Biases In Software Development"
 date: 2020-03-18T00:00:00+03:00
 draft: false
 tags: [programming, psychology]
-description: "Common mistakes in programming and system design."
 ---
 
 A couple of years ago, I started my first job as a programmer. On the first day, I entered the office, sat in my new chair, turned on the computer, checked out a project from the version control system and opened it in IDE. The first-ever piece of the code I saw looked like that:

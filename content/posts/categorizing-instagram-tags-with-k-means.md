@@ -3,7 +3,7 @@ title: "Categorizing Instagram Tags with K-Means"
 date: 2019-03-24T00:00:00+03:00
 draft: false
 tags: [machine learning, categorization, k-means, instagram]
-description: "Choose a perfect tags for Instagram with machine learning."
+summary: "Choose a perfect tags for Instagram with machine learning."
 ---
 Over the last couple of years Instagram, Facebook and many other social media have gotten rid of the chronological order in their post feed. While frustrating at first, this decision encouraged one part of social media that I like most of all: your content can be seen, discovered and rated not only by your friends and followers, but also by many other new people. To make your content discoverable you can use features such as hashtags, geolocations, tagging other people and so on.
 

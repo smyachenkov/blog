@@ -3,7 +3,6 @@ title: "Code Presentation Tips"
 date: 2020-08-11T00:00:00+03:00
 draft: false
 tags: [programming]
-description: "How to make code in slides look better."
 ---
 
 Sometimes, I need to show some code in my slides. It can be an internal presentation for 3-5 developers, an online meetup, or a live event. And many times, I have found myself trying to recover the lost code style configuration or to recreate a color palette from the previous presentation.

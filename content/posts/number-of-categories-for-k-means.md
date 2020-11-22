@@ -3,7 +3,6 @@ title: "Number of Categories for K-Means: Elbow and Silhouette Methods"
 date: 2019-05-26T00:00:00+03:00
 draft: false
 tags: [machine learning, categorization, k-means]
-description: "Tuning K-means results."
 ---
 
 [**K-Means**](https://wikipedia.org/wiki/K-means_clustering) is a very common and powerful clusterization algorithm widely used in an [unsupervised machine learning](https://wikipedia.org/wiki/Unsupervised_learning) tasks for dividing data into categories.
