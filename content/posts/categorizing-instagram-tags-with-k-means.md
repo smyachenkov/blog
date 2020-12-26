@@ -124,12 +124,15 @@ Let's see how it works on the example.
 1. In this image the gray squares are training examples and the colored circles are initial centroids. All the centroids are initialized with random coordinates, the training examples are not clustered.  
 ![K-Means step 1](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_1.svg)  
 <div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463053</div>
+
 2. Here all the training examples are assigned to the closest centroid and marked with the centroid's color  
 ![K-Means step 2](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_2.svg)  
 <div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463076</div>
+
 3. Now we need to calculate new centroids for the groups created in step 2. This is achieved by calculating centers of mass for each training example belonging to a group  
 ![K-Means step 3](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_3.svg)  
 <div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463081</div>
+
 4. Clusterization by distance from newly created centroid is repeated and if we see that there are no more iterations required we can stop the algorithm and call this clusterization final  
 ![K-Means step 4](/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_4.svg)  
 <div style="text-align: center; font-size:0.7em;">By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463085</div>
@@ -243,7 +246,7 @@ These human-readable names can help us quickly understand what this group is abo
 
 In this article we've explored a way of grouping Instagram tags from a set of Instagram posts into thematic categories.
 
-You can find a working demo here: https://github.com/smyachenkov/k-means_tags_demo
+You can find a working demo here: https://github.com/smyachenkov/k-means_tags_demo.
 
 I left behind some topics, for example, choosing k-means parameters like number of categories and number of tags in a single category. I will cover those topics in my upcoming posts.
 
