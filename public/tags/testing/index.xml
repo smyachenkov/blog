@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>testing on Stanislav Myachenkov</title>
+    <link>https://smyachenkov.com/tags/testing/</link>
+    <description>Recent content in testing on Stanislav Myachenkov</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 01 Jan 2020 00:00:00 +0300</lastBuildDate><atom:link href="https://smyachenkov.com/tags/testing/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Keep Tests Close To Application</title>
+      <link>https://smyachenkov.com/posts/keep-tests-close-to-application/</link>
+      <pubDate>Wed, 01 Jan 2020 00:00:00 +0300</pubDate>
+      
+      <guid>https://smyachenkov.com/posts/keep-tests-close-to-application/</guid>
+      <description>story from opus about how tests were far from app
+implementation - submodules, same project
+samples for java, node?, go?
+benefits:
+ developers can commit easier to integrate to pipeline knowledge sharing - developers can learn testing practices, QA can learn dev practices  </description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,790 @@
+<?xml-stylesheet href="/rss.xsl" type="text/xsl"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Stanislav Myachenkov</title>
+    <link>https://smyachenkov.com/</link>
+    <description>Recent content on Stanislav Myachenkov</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <managingEditor>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</managingEditor>
+    <webMaster>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</webMaster>
+    <lastBuildDate>Fri, 01 Oct 2021 00:00:00 +0300</lastBuildDate>
+    
+        <atom:link href="https://smyachenkov.com/index.xml" rel="self" type="application/rss+xml" />
+    
+    
+    
+        <item>
+        <title>Flyway Migrations in Multi-Module Maven Projects</title>
+        <link>https://smyachenkov.com/posts/flyway-migrations-in-multi-module-maven-projects/</link>
+        <pubDate>Fri, 24 Jan 2020 00:00:00 +0300</pubDate>
+        <author>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</author>
+        <guid>https://smyachenkov.com/posts/flyway-migrations-in-multi-module-maven-projects/</guid>
+        <description>Stanislav Myachenkov https://smyachenkov.com/posts/flyway-migrations-in-multi-module-maven-projects/ -&lt;p&gt;&lt;a href=&#34;https://flywaydb.org/&#34;&gt;Flyway&lt;/a&gt; is a database migration management tool, which allows you to deliver and validate changes of the database. It&amp;rsquo;s a powerful tool with a lot of useful features, but my favorite use-case is an ability to use Flyway migrations as part of an application. You can execute migrations when application starts, having your DB updated and application deployed in one seamless process. Also, it stimulates you to store migrations code very close to code of your application — in the same project.&lt;/p&gt;
+&lt;h2 id=&#34;common-migrations-for-multiple-applications&#34;&gt;Common migrations for multiple applications&lt;/h2&gt;
+&lt;p&gt;If you use the Maven build tool you probably have tried or seen multi-module projects. Such a structure can be useful when you want to keep similar projects, common libraries, and resources together in a single repository. This approach can help in a development process in situations when you update one common component and then you have to make new updates for every other repository which uses those components. If you use multi-module projects all those changes can be done in one single pull request.&lt;/p&gt;
+&lt;p&gt;Sometimes you need to store Flyway migrations as a common resource that can be accessed by any of the modules in your application. For example, if all your applications need to use the same version of the database and you need to ensure that the deployment of any of those apps will migrate the database to the target version.&lt;/p&gt;
+&lt;p&gt;The most reliable way to do it is to move all those migrations to the new module, package it as jar and include it to all required submodules.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s say we have a project with 2 modules and we want to share a set of migrations between them:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;V1__init.sql
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;V2__account_add_field.sql
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;One approach is to put them in a directory and use the filesystem path, but this way those files have to be present every time you run the jar. This adds a layer of complexity to build and distribution, and running a single jar is a lot easier without knowing that there are have to be some other files nearby.&lt;/p&gt;
+&lt;p&gt;To do that, we need to create a new module, package it as jar and include it in required projects.
+Now those files can be found using classpath.&lt;/p&gt;
+&lt;h2 id=&#34;how-to-implement&#34;&gt;How to implement&lt;/h2&gt;
+&lt;p&gt;For example, let&amp;rsquo;s implement this approach using Spring Boot&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s say we have two modules — &lt;code&gt;first&lt;/code&gt; and &lt;code&gt;second&lt;/code&gt;, which require common migrations, and module &lt;code&gt;commonmigrations&lt;/code&gt; which contains said migrations.&lt;/p&gt;
+&lt;p&gt;First, we need to create parent pom:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;project&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.smyachenkov&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;multimodule-flyway-demo&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;packaging&amp;gt;&lt;/span&gt;pom&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/packaging&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;modules&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;module&amp;gt;&lt;/span&gt;commonmigrations&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/module&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;module&amp;gt;&lt;/span&gt;first&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/module&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;module&amp;gt;&lt;/span&gt;second&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/module&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/modules&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/project&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;pom.xml of &lt;code&gt;commonmigrations&lt;/code&gt; module:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;project&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;commonmigrations&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;packaging&amp;gt;&lt;/span&gt;jar&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/packaging&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;multimodule-flyway-demo&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.smyachenkov&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/project&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Also, in this module in the &lt;code&gt;src/main/resources/migrations&lt;/code&gt; directory, we will store our migrations files.&lt;/p&gt;
+&lt;p&gt;In pom.xml of &lt;code&gt;first&lt;/code&gt; and &lt;code&gt;second&lt;/code&gt; modules we need to include &lt;code&gt;commonmigrations&lt;/code&gt; dependency:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;project&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;first&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;multimodule-flyway-demo&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.smyachenkov&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/parent&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;groupId&amp;gt;&lt;/span&gt;com.smyachenkov&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/groupId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;artifactId&amp;gt;&lt;/span&gt;commonmigrations&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/artifactId&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;version&amp;gt;&lt;/span&gt;1.0&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/version&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/dependency&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/dependencies&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/project&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;For both modules, we need to specify migrations location which will be resolved in the application. Here we only need to specify directory name in resources.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-yml&#34; data-lang=&#34;yml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;flyway&lt;/span&gt;:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#ff79c6&#34;&gt;enabled&lt;/span&gt;: &lt;span style=&#34;color:#ff79c6&#34;&gt;true&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;	&lt;span style=&#34;color:#ff79c6&#34;&gt;locations&lt;/span&gt;: classpath:migrations
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;That&amp;rsquo;s all, now common migrations are available for both applications and you can store them in a single place or even in a single repository.&lt;/p&gt;
+&lt;h2 id=&#34;links&#34;&gt;Links&lt;/h2&gt;
+&lt;p&gt;You can find full sample project with the code from this post here: &lt;a href=&#34;https://github.com/smyachenkov/multimodule-flyway-demo&#34;&gt;https://github.com/smyachenkov/multimodule-flyway-demo&lt;/a&gt;&lt;/p&gt;
+- https://smyachenkov.com/posts/flyway-migrations-in-multi-module-maven-projects/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>About</title>
+        <link>https://smyachenkov.com/about/</link>
+        <pubDate>Wed, 01 Jan 2020 00:00:00 +0300</pubDate>
+        <author>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</author>
+        <guid>https://smyachenkov.com/about/</guid>
+        <description>Stanislav Myachenkov https://smyachenkov.com/about/ -&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/about/avatar.jpg#center&#34; alt=&#34;avatar&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Software engineer from Moscow, Russia.&lt;/p&gt;
+&lt;p&gt;Notes about programming and computer science from my work and hobby projects.&lt;/p&gt;
+&lt;p&gt;Enjoy the reading!&lt;/p&gt;
+- https://smyachenkov.com/about/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>Kotlin Static Analysis Tools</title>
+        <link>https://smyachenkov.com/posts/kotlin-static-analysis-tools/</link>
+        <pubDate>Sun, 16 Jun 2019 00:00:00 +0300</pubDate>
+        <author>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</author>
+        <guid>https://smyachenkov.com/posts/kotlin-static-analysis-tools/</guid>
+        <description>Stanislav Myachenkov https://smyachenkov.com/posts/kotlin-static-analysis-tools/ -&lt;p&gt;&lt;a href=&#34;https://kotlinlang.org/&#34;&gt;Kotlin&lt;/a&gt; did an amazing job saving and including into its scope most of all valuable Java libraries, frameworks, and tools. But there is one type of tool that can&amp;rsquo;t be easily imported and reused — &lt;a href=&#34;https://wikipedia.org/wiki/Static_program_analysis&#34;&gt;static code analyzers&lt;/a&gt;. Java developers have implemented a lot of tools for code analysis, therefore, if you have worked with Java you might be familiar with some of the following projects: &lt;a href=&#34;https://pmd.github.io/&#34;&gt;PMD&lt;/a&gt;, &lt;a href=&#34;http://checkstyle.sourceforge.net/&#34;&gt;checkstyle&lt;/a&gt;, &lt;a href=&#34;http://findbugs.sourceforge.net/&#34;&gt;findbugs&lt;/a&gt;, &lt;a href=&#34;https://spotbugs.github.io/&#34;&gt;spotbugs&lt;/a&gt;, etc. Sadly, these projeсts cannot be reused in other languages with different syntax and rules, such as Kotlin.&lt;/p&gt;
+&lt;h2 id=&#34;why-do-we-need-static-analyzers&#34;&gt;Why do we need static analyzers&lt;/h2&gt;
+&lt;p&gt;JetBrains Team suggests using built-in inspections and rules in IntelliJ IDEA, but relying only on an IDE is not enough. It might be sufficient for very small projects with a single contributor, but it&amp;rsquo;s definitely not enough for huge projects that require teamwork and multiple contributors. Your team members are not perfect and can forget to fix inspection or ignore it intentionally because they don&amp;rsquo;t want to spend time on it. For these reasons we need tools that can be triggered on a build and fail pipelines to protect your project codebase from bugged and unreadable code.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/3_kotlin_static_analysis_tools/devops_cycle.png&#34; alt=&#34;DevOps Cycle&#34;&gt;&lt;/p&gt;
+&lt;p&gt;In the CI/CD cycle, static analyzers are located in the TEST stage and check if new builds have errors, vulnerabilities, or if the number of code smells or potential bugs exceed some threshold.&lt;/p&gt;
+&lt;p&gt;In this post, I will take a look at popular tools for code analysis and implement custom rules for them.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s see what Kotlin infrastructure has to offer.&lt;/p&gt;
+&lt;h2 id=&#34;ktlint&#34;&gt;ktlint&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://ktlint.github.io/&#34;&gt;ktlint&lt;/a&gt; is a very powerful Kotlin static analyzer. It can be run as a command line tool, as a Gradle task, or as a Maven plugin.
+It&amp;rsquo;s a simple and reliable tool, and I won&amp;rsquo;t dwell on this subject, because ktlint documentation contains all the code samples required for successful ktlint integration.&lt;/p&gt;
+&lt;p&gt;The subject I want to focus on is creation of custom rules and rulesets.&lt;/p&gt;
+&lt;p&gt;All the code analyzers use the same pattern — a visitor for all the elements of an &lt;a href=&#34;https://wikipedia.org/wiki/Abstract_syntax_tree&#34;&gt;abstract syntax tree&lt;/a&gt;. And every rule makes a stop at every element of this tree such as: import directives, functions, constructors, method calls, arguments lists — every language element.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;CustomRule&lt;/span&gt;: Rule(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;custom-rule&amp;#34;&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visit&lt;/span&gt;(node: ASTNode,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                       autoCorrect: Boolean,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                       emit: (offset: Int,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                              errorMessage: String,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                              canBeAutoCorrected: Boolean
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                       ) &lt;span style=&#34;color:#ff79c6&#34;&gt;-&amp;gt;&lt;/span&gt; Unit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (node.elementType &lt;span style=&#34;color:#ff79c6&#34;&gt;==&lt;/span&gt; KtNodeTypes.FUN) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            emit(node.startOffset, &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Wrong function&amp;#34;&lt;/span&gt;, &lt;span style=&#34;color:#ff79c6&#34;&gt;false&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This rule will trigger on every function in the project.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s do a more realistic case and trigger rules if a function name is longer than 20 symbols.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;val&lt;/span&gt; MAX_LENGTH = &lt;span style=&#34;color:#bd93f9&#34;&gt;20&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;FunctionNameLength&lt;/span&gt; : Rule(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;function-name-length&amp;#34;&lt;/span&gt;) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visit&lt;/span&gt;(node: ASTNode,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                       autoCorrect: Boolean,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                       emit: (offset: Int,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                              errorMessage: String,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                              canBeAutoCorrected: Boolean
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                       ) &lt;span style=&#34;color:#ff79c6&#34;&gt;-&amp;gt;&lt;/span&gt; Unit
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (node.elementType &lt;span style=&#34;color:#ff79c6&#34;&gt;==&lt;/span&gt; KtNodeTypes.FUN) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            node.children()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    .first { &lt;span style=&#34;color:#ff79c6&#34;&gt;it&lt;/span&gt;.elementType &lt;span style=&#34;color:#ff79c6&#34;&gt;==&lt;/span&gt; KtTokens.IDENTIFIER }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    .takeIf { &lt;span style=&#34;color:#ff79c6&#34;&gt;it&lt;/span&gt;.textLength &amp;gt; MAX_LENGTH }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#ff79c6&#34;&gt;?.&lt;/span&gt;let {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        emit(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                &lt;span style=&#34;color:#ff79c6&#34;&gt;it&lt;/span&gt;.startOffset,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Function name &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;${it.text}&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt; is longer than allowed &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;$MAX&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;_LENGTH symbols&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                &lt;span style=&#34;color:#ff79c6&#34;&gt;false&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;And that&amp;rsquo;s almost all the code you have to write!&lt;/p&gt;
+&lt;p&gt;To complete this project, you need to implement your &lt;code&gt;RuleSetProvider&lt;/code&gt; class where you specify all the ruleSetId that your ruleset contains:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;CustomRuleSetProvider&lt;/span&gt; : RuleSetProvider {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;get&lt;/span&gt;() = RuleSet(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;custom-ruleset&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            FunctionNameLength()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Also, you need to create a service file &lt;em&gt;com.pinterest.ktlint.core.RuleSetProvider&lt;/em&gt; in the project&amp;rsquo;s META_INF directory /resources/META-INF/services/. The content of this file should be the full name of your RuleSetProvider class, for example, com.mycustomruleset.CustomRuleSetProvider.&lt;/p&gt;
+&lt;p&gt;You can build this project using Gradle with a couple of dependencies:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Groovy&#34; data-lang=&#34;Groovy&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;apply &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;plugin:&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;kotlin&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;repositories &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    jcenter&lt;span style=&#34;color:#ff79c6&#34;&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dependencies &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    compileOnly &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.github.shyiko.ktlint:ktlint-core:$ktlintVersion&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    testCompile &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.github.shyiko.ktlint:ktlint-core:$ktlintVersion&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    testCompile &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.github.shyiko.ktlint:ktlint-test:$ktlintVersion&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The whole project structure should look like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;src/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  main/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    resources/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      META-INF/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        services/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          com.pinterest.ktlint.core.RuleSetProvider
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    kotlin/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      ktlintrules/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        CustomRuleSetProvider.kt
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        FunctionNameLength.kt
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;build.gradle
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here you can find a working example of a custom ktlint rule implementation: &lt;a href=&#34;https://github.com/smyachenkov/kt-ruleset/tree/master/ktlint-rules&#34;&gt;https://github.com/smyachenkov/kt-ruleset/tree/master/ktlint-rules&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;detekt&#34;&gt;detekt&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://github.com/arturbosch/detekt&#34;&gt;detekt&lt;/a&gt; is very similar to ktlint. It can be used as a build stage or as a &lt;a href=&#34;https://github.com/arturbosch/sonar-kotlin&#34;&gt;ruleset for SonarQube&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;There is a little difference between ktlint and detekt approaches. ktlint is focused on a minimalistic default configuration — you can just run the ktlint command without any arguments. The rationale for such approach is to not spend your valuable time on tools configuration and rather focus on the code of your project. On the other side, detekt makes it a lot easier to configure long and complex rulesets, rule inclusion, properties, weights, thresholds, etc. All of this configuration can be set in &lt;a href=&#34;https://arturbosch.github.io/detekt/configurations.html&#34;&gt;YAML config file&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;The main difference between the implementation of ktlint and detekt rules is that ktlint requires you to manually check every element of an AST, while detekt provides you with a large number of visit methods that visit only specific language elements, such as constructor, import directives, named functions, lambdas, etc.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;CustomRule&lt;/span&gt;(config: Config = Config.empty) : Rule(config) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;val&lt;/span&gt; issue = Issue(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            javaClass.simpleName,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Severity.CodeSmell,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Code smell&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Debt.FIVE_MINS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitCallExpression&lt;/span&gt;(expression: KtCallExpression) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        report(CodeSmell(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                issue,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                Entity.from(expression),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;It&amp;#39;s a code smell!&amp;#34;&lt;/span&gt;))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitLambdaExpression&lt;/span&gt;(lambdaExpression: KtLambdaExpression) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        report(CodeSmell(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                issue,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                Entity.from(lambdaExpression),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;It&amp;#39;s a code smell!&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        ))
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitClass&lt;/span&gt;(klass: KtClass) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;..&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitAnnotation&lt;/span&gt;(&lt;span style=&#34;color:#ff79c6&#34;&gt;annotation&lt;/span&gt;: KtAnnotation) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;..&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;..&lt;/span&gt;.
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Otherwise, both projects are pretty similar, and it won&amp;rsquo;t take you much effort to implement the same rule for both ktlint and detekt.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s implement our FunctionNameLength rule.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;val&lt;/span&gt; MAX_LENGTH = &lt;span style=&#34;color:#bd93f9&#34;&gt;20&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;FunctionNameLength&lt;/span&gt;(config: Config = Config.empty) : Rule(config) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;val&lt;/span&gt; issue = Issue(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            javaClass.simpleName,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Severity.CodeSmell,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Code smell&amp;#34;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            Debt.FIVE_MINS
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitNamedFunction&lt;/span&gt;(function: KtNamedFunction) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        function.name&lt;span style=&#34;color:#ff79c6&#34;&gt;?.&lt;/span&gt;let {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#ff79c6&#34;&gt;it&lt;/span&gt;.length &amp;gt; MAX_LENGTH) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                report(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    CodeSmell(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        issue,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        Entity.from(function),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Function name &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;${function.name}&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt; is longer than allowed &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;$MAX&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;_LENGTH&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The custom detekt ruleset project looks a lot like ktlint. It has almost the same structure:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;src/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;  main/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    resources/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      META-INF/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        services/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;          io.gitlab.arturbosch.detekt.api.RuleSetProvider
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    kotlin/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;      detektrules/
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        CustomRuleSetProvider.kt
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        FunctionNameLength.kt
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;build.gradle
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;The differences are in the name of the service file — it should be named &lt;em&gt;io.gitlab.arturbosch.detekt.api.RuleSetProvider&lt;/em&gt;, and in a slightly different RuleSetProvider implementation:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;CustomRuleSetProvider&lt;/span&gt; : RuleSetProvider {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;val&lt;/span&gt; ruleSetId: String = &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;custom-ruleset&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;instance&lt;/span&gt;(config: Config) = RuleSet(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            ruleSetId,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            listOf(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    NoBigDecimalDoubleConstructor(config),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    NoEmptyLineInMethodBody(config),
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    FunctionNameLength(config)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;To build the project, you will need the following dependencies:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Groovy&#34; data-lang=&#34;Groovy&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;apply &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;plugin:&lt;/span&gt; &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;kotlin&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;repositories &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    jcenter&lt;span style=&#34;color:#ff79c6&#34;&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dependencies &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    compileOnly &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.github.shyiko.ktlint:ktlint-core:$ktlintVersion&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    testCompile &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.github.shyiko.ktlint:ktlint-core:$ktlintVersion&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    testCompile &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.github.shyiko.ktlint:ktlint-test:$ktlintVersion&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here you can find an example of the custom detekt rule implementation: &lt;a href=&#34;https://github.com/smyachenkov/kt-ruleset/tree/master/detekt-rules&#34;&gt;https://github.com/smyachenkov/kt-ruleset/tree/master/detekt-rules&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;intellij-idea&#34;&gt;IntelliJ IDEA&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://www.jetbrains.com/idea/&#34;&gt;IntelliJ IDEA&lt;/a&gt;, a flagship JetBrains product has so many awesome and useful features, that you can discover new ways to code better again and again even if you are already have been doing it for years.&lt;/p&gt;
+&lt;p&gt;In this part, I will show you the ways to use IDEA inspections as a part of a project build or CI stage.&lt;/p&gt;
+&lt;h3 id=&#34;inspections-as-a-part-of-the-build&#34;&gt;Inspections as a part of the build&lt;/h3&gt;
+&lt;p&gt;If you have ever used IDEA, you are familiar with its inspections that suggest improvements in the text editor. It&amp;rsquo;s a big list of known and popular bugs, code smells, style suggestions and best practices for many languages. Right now there are more than 100 Kotlin inspections &lt;a href=&#34;https://github.com/JetBrains/kotlin/tree/master/idea/src/org/jetbrains/kotlin/idea/inspections&#34;&gt;bundled in&lt;/a&gt; Kotlin plugin for IntelliJ IDEA. Sometimes you may wonder — why am I skipping all that pile of knowledge when it can be included in my build or pipeline and prevent so many problems? There are a couple of ways to do it.&lt;/p&gt;
+&lt;p&gt;First, IDEA comes with a built-in &lt;a href=&#34;https://www.jetbrains.com/help/idea/command-line-code-inspector.html&#34;&gt;command line inspection tool&lt;/a&gt;. It requires an installed IDEA instance, so if you want to go this way — my suggestion is to build a Docker image with installed IntelliJ IDEA in your pipeline and run your project inside this image.&lt;/p&gt;
+&lt;p&gt;Second, there is &lt;a href=&#34;https://github.com/JetBrains/inspection-plugin/&#34;&gt;inspection-plugin&lt;/a&gt;, that allows you to run IDEA inspections as a part of Gradle build. Right now this project is still in beta version and frozen, so it&amp;rsquo;s not the best solution for a reliable pipeline, but I hope its development will continue.&lt;/p&gt;
+&lt;h3 id=&#34;custom-inspections&#34;&gt;Custom inspections&lt;/h3&gt;
+&lt;p&gt;If you have ever tried creating custom inspection for Java in IntelliJ IDEA  you might be familiar with &lt;a href=&#34;https://www.jetbrains.com/help/idea/structural-search-and-replace.html&#34;&gt;structural search&lt;/a&gt;. It allows you to search for elements of code and &lt;a href=&#34;https://www.jetbrains.com/help/idea/creating-custom-inspections.html&#34;&gt;create custom inspections&lt;/a&gt;. It&amp;rsquo;s a pretty easy and quick way to implement new rules.&lt;/p&gt;
+&lt;p&gt;Unfortunately, the structural search is currently not available for Kotlin language — &lt;a href=&#34;https://youtrack.jetbrains.com/issue/KT-10176&#34;&gt;https://youtrack.jetbrains.com/issue/KT-10176&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/3_kotlin_static_analysis_tools/sad_keanu.jpg&#34; alt=&#34;Sad Keanu&#34;&gt;&lt;/p&gt;
+&lt;p&gt;But if you really do want a new inspection, it won&amp;rsquo;t stop you, because it can be implemented via the &lt;a href=&#34;https://www.jetbrains.org/intellij/sdk/docs/tutorials/code_inspections.html&#34;&gt;IDEA inspection plugin&lt;/a&gt;. If you ever have written IDEA plugins, this should be similar to this type of project, if you didn&amp;rsquo;t do that — it&amp;rsquo;s not that hard, and JetBrains documentation provides good examples.&lt;/p&gt;
+&lt;p&gt;There is a couple of Kotlin-specific things you have to keep in mind:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;Use &lt;code&gt;AbstractKotlinInspection&lt;/code&gt; as a parent class of your inspection instead of &lt;code&gt;AbstractBaseJavaLocalInspectionTool&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Add Kotlin dependency to plugin.xml &lt;code&gt;&amp;lt;depends&amp;gt;org.jetbrains.kotlin&amp;lt;/depends&amp;gt;&lt;/code&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;AbstractKotlinInspection implementations share a similar approach with detekt rules: you have a lot of functions, that visit only specific language elements.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;CustomInspection&lt;/span&gt; : AbstractKotlinInspection() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;buildVisitor&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        holder: ProblemsHolder,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        isOnTheFly: Boolean
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ): PsiElementVisitor {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;object&lt;/span&gt;: KtVisitorVoid() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitLambdaExpression&lt;/span&gt;(lambdaExpression: KtLambdaExpression) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                holder.registerProblem(lambdaExpression &lt;span style=&#34;color:#ff79c6&#34;&gt;as&lt;/span&gt; PsiElement, &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Lambda expression problem&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitNamedFunction&lt;/span&gt;(function: KtNamedFunction) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                holder.registerProblem(function, &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Named function problem&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Now let&amp;rsquo;s implement our FunctionNameLength rule.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Kotlin&#34; data-lang=&#34;Kotlin&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;private&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;const&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;val&lt;/span&gt; MAX_LENGTH = &lt;span style=&#34;color:#bd93f9&#34;&gt;20&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;class&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;FunctionNameLengthInspection&lt;/span&gt; : AbstractKotlinInspection() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;buildVisitor&lt;/span&gt;(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        holder: ProblemsHolder,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        isOnTheFly: Boolean
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    ): PsiElementVisitor {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;return&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;object&lt;/span&gt;: KtVisitorVoid() {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            &lt;span style=&#34;color:#ff79c6&#34;&gt;override&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;fun&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;visitNamedFunction&lt;/span&gt;(function: KtNamedFunction) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                function.name&lt;span style=&#34;color:#ff79c6&#34;&gt;?.&lt;/span&gt;let {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; (&lt;span style=&#34;color:#ff79c6&#34;&gt;it&lt;/span&gt;.length &amp;gt; MAX_LENGTH) {
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        holder.registerProblem(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                function,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                                &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Function name &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;${function.name}&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt; is longer than allowed &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;$MAX&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;_LENGTH&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                        )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;            }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    }
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As for any IntelliJ plugin, you need to provide the plugin.xml file in META-INF directory:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-xml&#34; data-lang=&#34;xml&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;idea-plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;id&amp;gt;&lt;/span&gt;com.myinspectionplugin.kt-custom-inspection-plugin&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/id&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;name&amp;gt;&lt;/span&gt;idea-rulesets&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/name&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;vendor&amp;gt;&lt;/span&gt;Vendor Name&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/vendor&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;description&amp;gt;&lt;/span&gt;Custom Kotlin ruleset for IDEA inspections&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/description&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;depends&amp;gt;&lt;/span&gt;org.jetbrains.kotlin&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/depends&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;extensions&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;defaultExtensionNs=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.intellij&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;localInspection&lt;/span&gt; &lt;span style=&#34;color:#50fa7b&#34;&gt;language=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;kotlin&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;displayName=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;No empty line in method body is allowed&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;groupPath=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Java&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;groupBundle=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;messages.InspectionsBundle&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;groupKey=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;group.names.probable.bugs&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;enabledByDefault=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;true&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;level=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;WARNING&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;                         &lt;span style=&#34;color:#50fa7b&#34;&gt;implementationClass=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;com.myinspectionplugin.FunctionNameLengthInspection&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/extensions&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;actions&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/actions&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;&amp;lt;/idea-plugin&amp;gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;You will need the following dependencies to build this project:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-Groovy&#34; data-lang=&#34;Groovy&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;plugins &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;java&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;org.jetbrains.intellij&amp;#39;&lt;/span&gt; version &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;0.4.9&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    id &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;org.jetbrains.kotlin.jvm&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;repositories &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    mavenCentral&lt;span style=&#34;color:#ff79c6&#34;&gt;()&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;dependencies &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    implementation &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;org.jetbrains.kotlin:kotlin-stdlib-jdk8&amp;#34;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;intellij &lt;span style=&#34;color:#ff79c6&#34;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    version &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;2019.1&amp;#39;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    plugins &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;[&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;Kotlin&amp;#39;&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;]&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;}&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here you can find a full working example of the IDEA inspection plugin for Kotlin code: &lt;a href=&#34;https://github.com/smyachenkov/kt-ruleset/tree/master/idea-inspections-plugin&#34;&gt;https://github.com/smyachenkov/kt-ruleset/tree/master/idea-inspections-plugin&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;If you want to see all the inspection from this post in action, &lt;a href=&#34;https://github.com/smyachenkov/kt-ruleset/tree/master/demo&#34;&gt;here&lt;/a&gt; you can find a sample project that uses custom ktlint and detekt ruleset.&lt;/p&gt;
+&lt;p&gt;Static code analysis is an important part of a project builds or pipelines and you don&amp;rsquo;t have to lose it after you switched from Java to Kotlin. There are various configurable and extendable tools for this, such as ktlint and detekt projects. Besides these tools, JetBrains IDE&amp;rsquo;s are very powerful providers of programming language code styles. Right now, adding a new rule or including all IDE&amp;rsquo;s inspections into your pipeline is possible, but can be tricky and it&amp;rsquo;s easier to do it with another tool. Given the growing Kotlin popularity in the last years, we should expect static analyzers for Kotlin to continue improving and become even better.&lt;/p&gt;
+&lt;h2 id=&#34;links&#34;&gt;Links&lt;/h2&gt;
+&lt;p&gt;Repository with projects from this post — &lt;a href=&#34;https://github.com/smyachenkov/kt-ruleset&#34;&gt;https://github.com/smyachenkov/kt-ruleset&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;ktlint — &lt;a href=&#34;https://ktlint.github.io/&#34;&gt;https://ktlint.github.io/&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;detekt — &lt;a href=&#34;https://arturbosch.github.io/detekt/index.html&#34;&gt;https://arturbosch.github.io/detekt/index.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;JetBrains inspection plugin — &lt;a href=&#34;https://github.com/JetBrains/inspection-plugin&#34;&gt;https://github.com/JetBrains/inspection-plugin&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;IntelliJ IDEA code inspection plugin implementation tutorial — &lt;a href=&#34;https://www.jetbrains.org/intellij/sdk/docs/tutorials/code_inspections.html&#34;&gt;https://www.jetbrains.org/intellij/sdk/docs/tutorials/code_inspections.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;IntelliJ IDEA command line code inspector — &lt;a href=&#34;https://www.jetbrains.com/help/idea/command-line-code-inspector.html&#34;&gt;https://www.jetbrains.com/help/idea/command-line-code-inspector.html&lt;/a&gt;&lt;/p&gt;
+- https://smyachenkov.com/posts/kotlin-static-analysis-tools/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>Number of Categories for K-Means: Elbow and Silhouette Methods</title>
+        <link>https://smyachenkov.com/posts/number-of-categories-for-k-means/</link>
+        <pubDate>Sun, 26 May 2019 00:00:00 +0300</pubDate>
+        <author>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</author>
+        <guid>https://smyachenkov.com/posts/number-of-categories-for-k-means/</guid>
+        <description>Stanislav Myachenkov https://smyachenkov.com/posts/number-of-categories-for-k-means/ -&lt;p&gt;&lt;a href=&#34;https://wikipedia.org/wiki/K-means_clustering&#34;&gt;&lt;strong&gt;K-Means&lt;/strong&gt;&lt;/a&gt; is a very common and powerful clusterization algorithm widely used in an &lt;a href=&#34;https://wikipedia.org/wiki/Unsupervised_learning&#34;&gt;unsupervised machine learning&lt;/a&gt; tasks for dividing data into categories.
+The only decision you have to make is the number of clusters you want your data to be divided into — &lt;em&gt;k&lt;/em&gt; number.&lt;/p&gt;
+&lt;p&gt;Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving. For example, if you want to divide the dataset of people&amp;rsquo;s measurements into t-shirt sizes, you already know that t-shirts are measured from XXS to XXL and you can say with confidence that you know how many categories your data will have.&lt;/p&gt;
+&lt;p&gt;But often we face another type of a problem — when you don&amp;rsquo;t know the number of categories and you want to find it. One example of this problem is categorization of social media hashtags. &lt;a href=&#34;http://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/&#34;&gt;In my previous post&lt;/a&gt;, you can read more about it.&lt;/p&gt;
+&lt;p&gt;There are a lot of methods of finding optimal number of categories in a dataset, and I will focus on the 2 most popular for the K-Means algorithm: the &lt;a href=&#34;https://wikipedia.org/wiki/Elbow_method_(clustering)&#34;&gt;Elbow&lt;/a&gt; and the &lt;a href=&#34;https://wikipedia.org/wiki/Silhouette_(clustering)&#34;&gt;Silhouette&lt;/a&gt; methods.&lt;/p&gt;
+&lt;h2 id=&#34;dataset&#34;&gt;Dataset&lt;/h2&gt;
+&lt;p&gt;I will test both methods on a small synthetic &lt;a href=&#34;https://raw.githubusercontent.com/smyachenkov/clustering_categories_number_demo/master/posts.txt&#34;&gt;dataset&lt;/a&gt; of Instagram posts with 50 entries. It contains 50 entries with 8 groups of 5 posts from different categories plus 2 groups of 5 posts from mixed categories.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{camping, mothernature, hike, earth, rain, wildlife, landscapestyles, naturewalk, natureonly}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{streetview, streetphotographers, streetclassics, street_photo_club, streetphotographers}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{architecture, archilovers, architecture_hunter, architecturelovers, creative_architecture}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ireland, dublin, guinness, instaireland, discoverireland}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ocean, sand, ocean, water, waves, seaside, wave}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{portrait_shots, portrait_mood, portraitsociety, portraitvision, portraitoftheday, portraitmode}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ireland, dublin, guinness, instaireland, discoverireland, camping, mothernature, hike, earth, rain}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{catsofinstagram, cat, cats, cats_of_instagram, catoftheday, petstagram, catsagram}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{minimal_perfection, minimalmood, minimalistic, minimalismo, minimal, minimalism_world}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;...
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{architecture, archilovers, creative_architecture, minimalmood, minimalistic, minimal}
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Lets try it!&lt;/p&gt;
+&lt;h2 id=&#34;elbow-method&#34;&gt;Elbow method&lt;/h2&gt;
+&lt;p&gt;The general idea for both methods is to try different values for &lt;em&gt;k&lt;/em&gt; number and measure some of its metrics. In the elbow method, it&amp;rsquo;s the sum of the squared distances of an object to the closest centroid.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s measure how different the performance params will be for the number of categories from 1 to 20.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;with&lt;/span&gt; &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;open&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;posts.txt&amp;#34;&lt;/span&gt;, encoding&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;utf-8&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#ff79c6&#34;&gt;as&lt;/span&gt; inp:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    posts &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; inp&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;readlines()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;vectorizer &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; TfidfVectorizer(use_idf&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;True&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;posts_coordinates &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; vectorizer&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;fit_transform(posts)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Number of clusters / Inertia / Diff&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;previous &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#bd93f9&#34;&gt;0&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;for&lt;/span&gt; clusters_amount &lt;span style=&#34;color:#ff79c6&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;range&lt;/span&gt;(&lt;span style=&#34;color:#bd93f9&#34;&gt;1&lt;/span&gt;, &lt;span style=&#34;color:#bd93f9&#34;&gt;21&lt;/span&gt;, step):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    model &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; KMeans(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        n_clusters&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;clusters_amount,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        init&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;k-means++&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        max_iter&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;10&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        n_init&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        verbose&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;False&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    model&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;fit_predict(posts_coordinates)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    inertia &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; model&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;inertia_
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    diff &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; previous &lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt; inertia
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    previous &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; inertia
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;: &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt; &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;%&lt;/span&gt; (clusters_amount, inertia, &lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;-&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;if&lt;/span&gt; clusters_amount &lt;span style=&#34;color:#ff79c6&#34;&gt;==&lt;/span&gt; &lt;span style=&#34;color:#bd93f9&#34;&gt;1&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;else&lt;/span&gt; diff))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This script gives us the following data where &lt;strong&gt;Categories&lt;/strong&gt; column is the number of categories, &lt;strong&gt;Inertia&lt;/strong&gt; is the sum of squared distances to the closest centroid, and &lt;strong&gt;Diff&lt;/strong&gt; is the difference between current and previous values of Inertia:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Categories  Inertia Diff
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;1           43,56   -
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2           37,13   6,43
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3           31,82   5,30
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;4           26,74   5,08
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5           21,82   4,92
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;6           17,93   3,88
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;7           12,74   5,19
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8           9,07    3,66
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;9           7,74    1,33
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;10          6,57    1,16
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;11          5,99    0,57
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;12          5,76    0,23
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;13          5,54    0,21
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;14          5,31    0,22
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;15          5,10    0,21
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;16          4,86    0,23
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;17          4,64    0,22
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;18          4,56    0,08
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;19          4,25    0,30
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;20          4,05    0,20
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/2_number-of-categories-for-k-means/elbow_chart.png&#34; alt=&#34;Elbow chart&#34;&gt;
+&lt;img src=&#34;https://smyachenkov.com/images/2_number-of-categories-for-k-means/elbow_diff_chart.png&#34; alt=&#34;Elbow diff chart&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Here we can see that the Inertia parameter almost stops decreasing after the number of categories reaches &lt;strong&gt;8&lt;/strong&gt;. It&amp;rsquo;s even more clear on the second diagram, where the largest drop in speed has been achieved after the &lt;strong&gt;8&lt;/strong&gt;th category and every difference after that does not change much.&lt;/p&gt;
+&lt;p&gt;Now let&amp;rsquo;s try to confirm this number with a silhouette method.&lt;/p&gt;
+&lt;h2 id=&#34;silhouette-method&#34;&gt;Silhouette method&lt;/h2&gt;
+&lt;p&gt;Silhouette metric has its values in a range from -1 to 1 and measures how far or close are points in clusters to points of another cluster. The higher the value — the farther points of clusters are from each other. And that&amp;rsquo;s what we want to achieve — more distinct clusters that do not intersect.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;with&lt;/span&gt; &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;open&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;posts.txt&amp;#34;&lt;/span&gt;, encoding&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;utf-8&amp;#34;&lt;/span&gt;) &lt;span style=&#34;color:#ff79c6&#34;&gt;as&lt;/span&gt; inp:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    posts &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; inp&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;readlines()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;vectorizer &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; TfidfVectorizer(use_idf&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;True&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;posts_coordinates &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; vectorizer&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;fit_transform(posts)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Number of clusters / Silhouette score&amp;#34;&lt;/span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;for&lt;/span&gt; clusters_amount &lt;span style=&#34;color:#ff79c6&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;range&lt;/span&gt;(&lt;span style=&#34;color:#bd93f9&#34;&gt;2&lt;/span&gt;, &lt;span style=&#34;color:#bd93f9&#34;&gt;21&lt;/span&gt;, step):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    model &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; KMeans(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        n_clusters&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;clusters_amount,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        init&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;k-means++&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        max_iter&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;10&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        n_init&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        verbose&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;False&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    )
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    categories &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; model&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;fit_predict(posts_coordinates)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    silhouette_avg &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; silhouette_score(posts_coordinates, categories)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;: &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;%&lt;/span&gt; (clusters_amount, silhouette_avg))
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This script gives us the following data:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Categories Silhouette score
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2          0,13
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3          0,23
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;4          0,29
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5          0,35
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;6          0,41
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;7          0,48
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;8          0,51
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;9          0,50
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;10         0,48
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;11         0,47
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;12         0,45
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;13         0,43
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;14         0,41
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;15         0,39
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;16         0,39
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;17         0,37
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;18         0,39
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;19         0,34
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;20         0,34
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/2_number-of-categories-for-k-means/silhouette.png&#34; alt=&#34;Silhouette chart&#34;&gt;&lt;/p&gt;
+&lt;p&gt;The highest score is achieved in &lt;strong&gt;8&lt;/strong&gt; categories, the same number as the one we got using the elbow method.&lt;/p&gt;
+&lt;h2 id=&#34;conclusion&#34;&gt;Conclusion&lt;/h2&gt;
+&lt;p&gt;Choosing the correct and optimal number of categories is a very frequent problem in unsupervised machine learning and data clustering. Sometimes you can make a fairly good assumption by just looking at your data and studying its domain. But if you want to adjust this number to be more precise or find order in chaotic data it&amp;rsquo;s good to test different metrics and see what insights about your data they provide. In this post, I have tried only two methods for one problem, but there are many more. Don&amp;rsquo;t be afraid to try something new!&lt;/p&gt;
+&lt;h2 id=&#34;links&#34;&gt;Links&lt;/h2&gt;
+&lt;p&gt;Scripts and dataset from this post: &lt;a href=&#34;https://github.com/smyachenkov/clustering_categories_number_demo&#34;&gt;https://github.com/smyachenkov/clustering_categories_number_demo&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Elbow method description: &lt;a href=&#34;https://wikipedia.org/wiki/Elbow_method_(clustering)&#34;&gt;https://wikipedia.org/wiki/Elbow_method_(clustering)&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Silhouette method description: &lt;a href=&#34;https://wikipedia.org/wiki/Silhouette_(clustering)&#34;&gt;https://wikipedia.org/wiki/Silhouette_(clustering)&lt;/a&gt;)&lt;/p&gt;
+&lt;p&gt;Problem of choosing number of clusters in a dataset: &lt;a href=&#34;https://wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set&#34;&gt;https://wikipedia.org/wiki/Determining_the_number_of_clusters_in_a_data_set&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;K-Means implementation in scikit-learn library: &lt;a href=&#34;https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html&#34;&gt;https://scikit-learn.org/stable/modules/generated/sklearn.cluster.KMeans.html&lt;/a&gt;&lt;/p&gt;
+&lt;p&gt;Silhouette metric implementation in scikit-learn library: &lt;a href=&#34;https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html&#34;&gt;https://scikit-learn.org/stable/modules/generated/sklearn.metrics.silhouette_score.html&lt;/a&gt;&lt;/p&gt;
+- https://smyachenkov.com/posts/number-of-categories-for-k-means/ - </description>
+        </item>
+    
+    
+    
+        <item>
+        <title>Categorizing Instagram Tags with K-Means</title>
+        <link>https://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/</link>
+        <pubDate>Sun, 24 Mar 2019 00:00:00 +0300</pubDate>
+        <author>mailto:s.myachenkov@gmail.com (Stanislav Myachenkov)</author>
+        <guid>https://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/</guid>
+        <description>Stanislav Myachenkov https://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/ -&lt;p&gt;Over the last couple of years Instagram, Facebook and many other social media have gotten rid of the chronological order in their post feed. While frustrating at first, this decision encouraged one part of social media that I like most of all: your content can be seen, discovered and rated not only by your friends and followers, but also by many other new people. To make your content discoverable you can use features such as hashtags, geolocations, tagging other people and so on.&lt;/p&gt;
+&lt;p&gt;In this article I will show you how to choose hashtags for your posts using machine learning to make it searchable for as many people interested in similar posts as possible. To solve this problem I will try to separate a dataset of Instagram hashtags from different users by their categories, so we can always have a good selection of hashtags on our hands. Ideally we will end up with a set of categories specific enough to fit  your particular post, for example, about minimalistic architecture photography in Morocco or skydiving in New Zealand.&lt;/p&gt;
+&lt;h2 id=&#34;perfect-tag&#34;&gt;Perfect tag&lt;/h2&gt;
+&lt;p&gt;In order to choose effective hashtags you have to balance two things.&lt;/p&gt;
+&lt;p&gt;First, your tags should not be overused, because otherwise your may easily get lost in millions of other posts. For example, hashtags such as &lt;a href=&#34;https://www.instagram.com/explore/tags/travel/&#34;&gt;&lt;u&gt;#travel&lt;/u&gt;&lt;/a&gt; with 380m posts and &lt;a href=&#34;https://www.instagram.com/explore/tags/photooftheday/&#34;&gt;&lt;u&gt;#photooftheday&lt;/u&gt;&lt;/a&gt; with 644m at the moment are simply too popular making it quite hard to compete for the top places&lt;/p&gt;
+&lt;p&gt;Second, your tags must be popular enough in their category; there must be people who watch and update them with new posts daily. Let&amp;rsquo;s say, our lowest boundary for tag popularity will be 100k posts and the highest will be 10m. Those numbers are purely objective: I got them from my friends who are active Instagram users. The data may be not perfect, but it&amp;rsquo;s good enough for the first iteration.&lt;/p&gt;
+&lt;p&gt;In addition to all that numeric criteria, your tag must be related to your post and your post category, simply because users want to discover related content.&lt;/p&gt;
+&lt;p&gt;To keep it short, our perfect tag must:&lt;br&gt;
+• Be specific enough&lt;br&gt;
+• Have between 100k and 10m posts&lt;br&gt;
+• Belong to some group(s)&lt;/p&gt;
+&lt;h2 id=&#34;our-goal&#34;&gt;Our Goal&lt;/h2&gt;
+&lt;p&gt;We are going to implement a categorization system, that will take tags like &lt;u&gt;#building&lt;/u&gt;, &lt;u&gt;#skyscaper&lt;/u&gt;, &lt;u&gt;#architecturelovers&lt;/u&gt; and &lt;u&gt;#architectureporn&lt;/u&gt; and put them in a category that we will later call &lt;strong&gt;Architecture&lt;/strong&gt;, or put tags like &lt;u&gt;#pizza&lt;/u&gt;, &lt;u&gt;#pasta&lt;/u&gt; and &lt;u&gt;#italy&lt;/u&gt; in another category that can be called &lt;strong&gt;Italian Food&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;To accomplish this, we are going to to collect a large number of Instagram posts, extract tags from them, and divide those tags into categories. You may ask, where are we going to find a list of the categories? Here&amp;rsquo;s the beauty of machine learning algorithms: we don&amp;rsquo;t know right now and that&amp;rsquo;s fine! However, using a few techniques and algorithms, we can separate a huge number of tags into small groups.&lt;/p&gt;
+&lt;p&gt;That&amp;rsquo;s is how &lt;strong&gt;Unsupervised Learning&lt;/strong&gt; works.&lt;/p&gt;
+&lt;p&gt;In machine learning there are two huge areas: &lt;a href=&#34;https://wikipedia.org/wiki/Supervised_learning&#34;&gt;supervised learning&lt;/a&gt; and &lt;a href=&#34;https://en.wikipedia.org/wiki/Unsupervised_learning&#34;&gt;unsupervised learning&lt;/a&gt;. The main goal of supervised machine learning is to determine if new data belongs to one of the already known groups, while unsupervised learning separates data into new categories, that were unknown before.&lt;/p&gt;
+&lt;p&gt;We will be using one of the most popular unsupervised machine learning algorithms —  &lt;a href=&#34;https://wikipedia.org/wiki/K-means_clustering&#34;&gt;&lt;strong&gt;k-means&lt;/strong&gt;&lt;/a&gt;.&lt;/p&gt;
+&lt;h2 id=&#34;dataset&#34;&gt;Dataset&lt;/h2&gt;
+&lt;p&gt;Our dataset consist of sets of hashtags, one for each instagram post. A single post may contain from 0 to 30 hashtags.&lt;/p&gt;
+&lt;p&gt;Here&amp;rsquo;s the distribution of tags in my dataset:&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/tag_count_distribution.png&#34; alt=&#34;Tag distribution&#34;&gt;&lt;/p&gt;
+&lt;p&gt;From this data, we can already make some quick assumptions. The two most popular numbers of hashtags are 1 and 30. It means that there are two broad categories of users: the first category assigns one meaningfull tag without spending lots of time on choosing more popular tags, and the other milks the hashtag machine for every possible opportunity :)&lt;/p&gt;
+&lt;p&gt;Posts without any tags are excluded from this dataset because they don&amp;rsquo;t provide anything for our task.&lt;/p&gt;
+&lt;p&gt;We don&amp;rsquo;t need any other information from posts except their tags: we don&amp;rsquo;t care about the author, location or number of likes. Our input data will be a list of arrays of tags, where each line represents one single post:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;. . .
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{artofvisual,instamoment,spain,photo,andalucia,instalike,igersspain}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{artofvisual,photos,nature,andalucia,instamoment,pic,spain,seville}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{picture,exposure,instalike,photoftheday,igers,spain,picoftheday}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{instamoment,picoftheday,photoftheday,picture,exploreeverything,igers}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{christmas,photoftheday,picoftheday,moment,pic,igers}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{ramennoodles,ramen,vegan,veganfood,whatveganseat,berlin,japanese,weekend}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{summer,frozenyogurt,oreo,mango,blueberry}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{photography,see,love,pic,mountains,view,picture,mood,dream,day,nature,pictureoftheday}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{autumn,tofu,instadaily,whatveganseat,lunch,vegan,pumpkin}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{hamburger,manhattan,fries,vegan,downtown,vacation,nyc}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{naturewalk,zipline,archery,sunset,cycling,hiking,kenya}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{sunsetlover,sunset,lovephotography,mobilephotography,sunsetsky,mobileclick,visionofpictures}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;{flowers,shadow,simplicity,spring,minimalism,home,nature,sunny,weekend,tulips,morning,still,mood}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;. . .
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;h2 id=&#34;measuring-tf-idf-for-tags&#34;&gt;Measuring tf-idf for tags&lt;/h2&gt;
+&lt;p&gt;We are going to place our posts into a multi-dimensional space, where each dimension represents one hashtag. It will be a very sparse space, because each post contains maximum of 30 tags, which means there will be 30 non-zero coordinate values, while all other coordinates, a couple of thousand of them, will be zero.&lt;/p&gt;
+&lt;p&gt;At this point, let&amp;rsquo;s do the whole process on a small sample dataset of 6 posts about Italian food and architecture:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;0: {italy,food}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;1: {food,italy}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;2: {food}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;3: {italy,architecture}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;4: {architecture,italy}
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;5: {architecture, }
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;As you can see, this dataset has 3 unique hashtags: &lt;u&gt;#italy&lt;/u&gt;, &lt;u&gt;#food&lt;/u&gt;, and &lt;u&gt;#architecture&lt;/u&gt;. That means we are going to be dealing with a 3-dimensional space.&lt;/p&gt;
+&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/plot_1_empty.png&#34; alt=&#34;Empty tag dimension&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Now we need to put our posts into this 3-D tag space. We will calculate dimension values for every post using &lt;a href=&#34;https://wikipedia.org/wiki/Tf%E2%80%93idf&#34;&gt;&lt;strong&gt;td-idf&lt;/strong&gt;&lt;/a&gt; metric. This metric shows how important a word is in a document, in our case it measures the impact of a single tag for a post. It means that tags with very low or very high frequency will be assigned a lower rank.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;vectorizer &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; TfidfVectorizer()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;posts_coordinates &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; vectorizer&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;fit_transform(posts)	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(posts_coordinates)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;0&lt;/th&gt;
+&lt;th&gt;1&lt;/th&gt;
+&lt;th&gt;2&lt;/th&gt;
+&lt;th&gt;3&lt;/th&gt;
+&lt;th&gt;4&lt;/th&gt;
+&lt;th&gt;5&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;architecture&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.75&lt;/td&gt;
+&lt;td&gt;0.75&lt;/td&gt;
+&lt;td&gt;1.0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;food&lt;/td&gt;
+&lt;td&gt;0.75&lt;/td&gt;
+&lt;td&gt;0.75&lt;/td&gt;
+&lt;td&gt;1.0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;italy&lt;/td&gt;
+&lt;td&gt;0.65&lt;/td&gt;
+&lt;td&gt;0.65&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.65&lt;/td&gt;
+&lt;td&gt;0.65&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/plot_2_tags.png&#34; alt=&#34;Posts in 3d space&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Posts 0 and 1 contain exactly the same set of tags, so they have exactly the same coordinates and they are placed in the same position in our tag space. Same goes for posts 3 and 4; the order of tags doesn&amp;rsquo;t matter.&lt;/p&gt;
+&lt;p&gt;This will be our data for following clustering with k-means.&lt;/p&gt;
+&lt;h2 id=&#34;applying-k-means&#34;&gt;Applying K-Means&lt;/h2&gt;
+&lt;p&gt;&lt;a href=&#34;https://wikipedia.org/wiki/K-means_clustering&#34;&gt;K-Means&lt;/a&gt; is one of the most popular clustering algorithms and it&amp;rsquo;s pretty simple. The only decision you have to make is the number of clusters you want your data to be divided into — &lt;em&gt;k&lt;/em&gt; number. The goal of this algorithm is to determine coordinates of &lt;em&gt;k&lt;/em&gt; points, which will be the centers of mass for a cluster. Those points are also called &lt;em&gt;centroids&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;The algorithm has 3 steps:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Initialize &lt;em&gt;k&lt;/em&gt; cenrtoids with random coordinates&lt;/li&gt;
+&lt;li&gt;Divide all training examples into &lt;em&gt;k&lt;/em&gt; groups by choosing the nearest centroid&lt;/li&gt;
+&lt;li&gt;Assign new centroid coordinates by calculating a center of mass for the groups from step 2&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Steps 2 and 3 are repeated until the algorithm converges or reaches an optimal state. Results may depend a lot on randomly chosen initial centroid values, so calculcations can be run multiple times to get rid of random impact.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s see how it works on the example.&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;In this image the gray squares are training examples and the colored circles are initial centroids. All the centroids are initialized with random coordinates, the training examples are not clustered.&lt;br&gt;
+&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_1.svg&#34; alt=&#34;K-Means step 1&#34;&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div style=&#34;text-align: center; font-size:0.7em;&#34;&gt;By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463053&lt;/div&gt;
+&lt;ol start=&#34;2&#34;&gt;
+&lt;li&gt;Here all the training examples are assigned to the closest centroid and marked with the centroid&amp;rsquo;s color&lt;br&gt;
+&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_2.svg&#34; alt=&#34;K-Means step 2&#34;&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div style=&#34;text-align: center; font-size:0.7em;&#34;&gt;By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463076&lt;/div&gt;
+&lt;ol start=&#34;3&#34;&gt;
+&lt;li&gt;Now we need to calculate new centroids for the groups created in step 2. This is achieved by calculating centers of mass for each training example belonging to a group&lt;br&gt;
+&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_3.svg&#34; alt=&#34;K-Means step 3&#34;&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div style=&#34;text-align: center; font-size:0.7em;&#34;&gt;By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463081&lt;/div&gt;
+&lt;ol start=&#34;4&#34;&gt;
+&lt;li&gt;Clusterization by distance from newly created centroid is repeated and if we see that there are no more iterations required we can stop the algorithm and call this clusterization final&lt;br&gt;
+&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/K_Means_Example_Step_4.svg&#34; alt=&#34;K-Means step 4&#34;&gt;&lt;/li&gt;
+&lt;/ol&gt;
+&lt;div style=&#34;text-align: center; font-size:0.7em;&#34;&gt;By I, Weston.pace, CC BY-SA 3.0, https://commons.wikimedia.org/w/index.php?curid=2463085&lt;/div&gt;
+&lt;p&gt;Now we are going to apply k-means clusterization to our dataset of posts about Italy. By looking at it, we can tell that there are 2 groups: food and architecture. So our &lt;em&gt;k&lt;/em&gt;-parameter(the number of clusters we are going to divide our group into) will be 2.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;KMEANS_CLUSTERS &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#bd93f9&#34;&gt;2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;model &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; KMeans(
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    n_clusters&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;KMEANS_CLUSTERS,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    init&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#39;k-means++&amp;#39;&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    max_iter&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;5&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    n_init&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;1&lt;/span&gt;,
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    verbose&lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;True&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;groups &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; model&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;fit_predict(data)
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;groups&lt;/code&gt; is an array with the same size as the initial &lt;code&gt;data&lt;/code&gt; array — 6. And it contains groups ids for entries in &lt;code&gt;data&lt;/code&gt; in the same order:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;post 0: 0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;post 1: 0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;post 2: 0
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;post 3: 1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;post 4: 1
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;post 5: 1
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Our dataset was successfully divided into two groups: 0 —  &amp;ldquo;food&amp;rdquo; and 1 —  &amp;ldquo;architecture&amp;rdquo;.&lt;/p&gt;
+&lt;h2 id=&#34;extracting-tags-for-categories&#34;&gt;Extracting Tags For Categories&lt;/h2&gt;
+&lt;p&gt;Lets see where the centroids are located.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;centroids &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; model&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;cluster_centers_
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;&lt;code&gt;centroids&lt;/code&gt; are represented by a 2x3 matrix where each row contains the coordinates of a centroid in 3-dimensional space. Let&amp;rsquo;s add them to our plot.&lt;/p&gt;
+&lt;table&gt;
+&lt;thead&gt;
+&lt;tr&gt;
+&lt;th&gt;&lt;/th&gt;
+&lt;th&gt;architecture&lt;/th&gt;
+&lt;th&gt;food&lt;/th&gt;
+&lt;th&gt;italy&lt;/th&gt;
+&lt;/tr&gt;
+&lt;/thead&gt;
+&lt;tbody&gt;
+&lt;tr&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.84&lt;/td&gt;
+&lt;td&gt;0.43&lt;/td&gt;
+&lt;/tr&gt;
+&lt;tr&gt;
+&lt;td&gt;1&lt;/td&gt;
+&lt;td&gt;0.84&lt;/td&gt;
+&lt;td&gt;0&lt;/td&gt;
+&lt;td&gt;0.43&lt;/td&gt;
+&lt;/tr&gt;
+&lt;/tbody&gt;
+&lt;/table&gt;
+&lt;p&gt;&lt;img src=&#34;https://smyachenkov.com/images/1_categorizing-instagram-tags-with-k-means/plot_3_kmeans.png&#34; alt=&#34;K-Means centroids&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Our categories are located in the same 3-dimendional space as the posts from our training example. It means that each category has some numeric value that represents its relations to tags - coordinates. If we take absolute values of coordinates and sort them in ascending order - from highest to lowest - we can find tags with most impact on this particular category: it will be tags with lowest value, the closest to a category.&lt;/p&gt;
+&lt;p&gt;For instance, the most meaningful tag for our first centroid(on the right in the picture) is &lt;u&gt;#architecture&lt;/u&gt;, and for the second centroid(on the left in the picture) it&amp;rsquo;s &lt;u&gt;#food&lt;/u&gt;.&lt;/p&gt;
+&lt;p&gt;Imagine that we have many more tags, let&amp;rsquo;s say 10,000. We would not be interested in all 10,000 relations for each category, we would only want the most meaningful tags. So we will limit the top tags for each category by some number and only show those ones. This number will depend on how many clusters we choose.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s get back to our example. We are going to limit the number of tags in each category by two and pick the two most meaningful tags.&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-python&#34; data-lang=&#34;python&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;TAGS_IN_CATEGORY &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; &lt;span style=&#34;color:#bd93f9&#34;&gt;2&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;...&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;ordered_centroids &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; model&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;cluster_centers_&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;argsort()[:, ::&lt;span style=&#34;color:#ff79c6&#34;&gt;-&lt;/span&gt;&lt;span style=&#34;color:#bd93f9&#34;&gt;1&lt;/span&gt;]	
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;tags &lt;span style=&#34;color:#ff79c6&#34;&gt;=&lt;/span&gt; vectorizer&lt;span style=&#34;color:#ff79c6&#34;&gt;.&lt;/span&gt;get_feature_names()
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;&lt;span style=&#34;color:#ff79c6&#34;&gt;for&lt;/span&gt; idx, centroids &lt;span style=&#34;color:#ff79c6&#34;&gt;in&lt;/span&gt; &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;enumerate&lt;/span&gt;(ordered_centroids):
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;Centroid &lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;:&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;%&lt;/span&gt; idx)
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;    &lt;span style=&#34;color:#ff79c6&#34;&gt;for&lt;/span&gt; centroid_tag &lt;span style=&#34;color:#ff79c6&#34;&gt;in&lt;/span&gt; centroids[:TAGS_IN_CATEGORY]:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;        &lt;span style=&#34;color:#8be9fd;font-style:italic&#34;&gt;print&lt;/span&gt;(&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;#&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;%s&lt;/span&gt;&lt;span style=&#34;color:#f1fa8c&#34;&gt;&amp;#34;&lt;/span&gt; &lt;span style=&#34;color:#ff79c6&#34;&gt;%&lt;/span&gt; tags[centroid_tag])
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This code separeates our tags into two categories:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Centroid 0:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#architecture
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#italy
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;Centroid 1:
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#food
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#italy
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;Here, tags in the category are ordered from the most relevant to the least. If we take some tags from the top of every category, we&amp;rsquo;ll get tags that can represent this category in a shorter way than listing all of them. Let&amp;rsquo;s call them &lt;em&gt;leading tags&lt;/em&gt;. Like if we were to choose the one leading tag from our categories, we would get &lt;u&gt;#architecture&lt;/u&gt; and &lt;u&gt;#food&lt;/u&gt;.&lt;/p&gt;
+&lt;p&gt;Let&amp;rsquo;s try this approach using a bigger sample. Imagine we have a classifier that produces tag categories with 20 tags, and one of the categories looks like this:&lt;/p&gt;
+&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; style=&#34;color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;&#34;&gt;&lt;code class=&#34;language-fallback&#34; data-lang=&#34;fallback&#34;&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#boat
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#water
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#sailing
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#ocean
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#lake
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#ship
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#river
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#boatlife
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#boats
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#port
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#island
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#sail
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#yacht
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#vacation
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#reflection
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#sailboat
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#fishing
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#bateau
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#relax
+&lt;/span&gt;&lt;/span&gt;&lt;span style=&#34;display:flex;&#34;&gt;&lt;span&gt;#boating
+&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;p&gt;This group clearly combines tags related to boats and sailing. We can give it a human-readable name using its leading tags. Let&amp;rsquo;s say we want to have 3 leading tags, then they will be &lt;u&gt;#boat&lt;/u&gt;, &lt;u&gt;#water&lt;/u&gt; and &lt;u&gt;#sailing&lt;/u&gt;. In the next step, we will concatenate these tags into a single name so it will look like &lt;strong&gt;boat_water_sailing&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;While working on a large dataset, we will end up with a huge list of categories named like this one, or, for example, something like &lt;strong&gt;animal_animals_cat&lt;/strong&gt;, &lt;strong&gt;goodmorning_coffee_morning&lt;/strong&gt; or &lt;strong&gt;sushi_japanesefood_food&lt;/strong&gt;.
+These human-readable names can help us quickly understand what this group is about and implement a groups catalogue, search or group suggestions.&lt;/p&gt;
+&lt;h2 id=&#34;result&#34;&gt;Result&lt;/h2&gt;
+&lt;p&gt;In this article we&amp;rsquo;ve explored a way of grouping Instagram tags from a set of Instagram posts into thematic categories.&lt;/p&gt;
+&lt;p&gt;You can find a working demo here: &lt;a href=&#34;https://github.com/smyachenkov/k-means_tags_demo&#34;&gt;https://github.com/smyachenkov/k-means_tags_demo&lt;/a&gt;.&lt;/p&gt;
+&lt;p&gt;I left behind some topics, for example, choosing k-means parameters like number of categories and number of tags in a single category. I will cover those topics in my upcoming posts.&lt;/p&gt;
+&lt;p&gt;In conclusion, I want to say that exploring new content can be very fun, and some categories have a huge amount of awesome content. You can use this knowledge to find interesting new people, find your unique style, place your content into the right category or be inspired by something new.&lt;/p&gt;
+&lt;p&gt;Keep expressing yourself!&lt;/p&gt;
+- https://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/ - </description>
+        </item>
+    
+    
+  </channel>
+</rss> 

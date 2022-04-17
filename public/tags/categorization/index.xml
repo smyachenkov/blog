@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>categorization on Stanislav Myachenkov</title>
+    <link>https://smyachenkov.com/tags/categorization/</link>
+    <description>Recent content in categorization on Stanislav Myachenkov</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Sun, 26 May 2019 00:00:00 +0300</lastBuildDate><atom:link href="https://smyachenkov.com/tags/categorization/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Number of Categories for K-Means: Elbow and Silhouette Methods</title>
+      <link>https://smyachenkov.com/posts/number-of-categories-for-k-means/</link>
+      <pubDate>Sun, 26 May 2019 00:00:00 +0300</pubDate>
+      
+      <guid>https://smyachenkov.com/posts/number-of-categories-for-k-means/</guid>
+      <description>K-Means is a very common and powerful clusterization algorithm widely used in an unsupervised machine learning tasks for dividing data into categories. The only decision you have to make is the number of clusters you want your data to be divided into — k number.
+Sometimes you already know how many categories you need to have. It depends a lot on the type of your problem, your data, and the problems you are solving.</description>
+    </item>
+    
+    <item>
+      <title>Categorizing Instagram Tags with K-Means</title>
+      <link>https://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/</link>
+      <pubDate>Sun, 24 Mar 2019 00:00:00 +0300</pubDate>
+      
+      <guid>https://smyachenkov.com/posts/categorizing-instagram-tags-with-k-means/</guid>
+      <description>Choose a perfect tags for Instagram with machine learning.</description>
+    </item>
+    
+  </channel>
+</rss>

@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+  <channel>
+    <title>psychology on Stanislav Myachenkov</title>
+    <link>https://smyachenkov.com/tags/psychology/</link>
+    <description>Recent content in psychology on Stanislav Myachenkov</description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 18 Mar 2020 00:00:00 +0300</lastBuildDate><atom:link href="https://smyachenkov.com/tags/psychology/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Cognitive Biases In Software Development</title>
+      <link>https://smyachenkov.com/posts/cognitive-biases-software-development/</link>
+      <pubDate>Wed, 18 Mar 2020 00:00:00 +0300</pubDate>
+      
+      <guid>https://smyachenkov.com/posts/cognitive-biases-software-development/</guid>
+      <description>A couple of years ago, I started my first job as a programmer. On the first day, I entered the office, sat in my new chair, turned on the computer, checked out a project from the version control system and opened it in IDE. The first-ever piece of the code I saw looked like that:
+ // TODO it works, but it&amp;#39;s ugly, rewrite function init() { 	// some code } As you may already have guessed, this code remained untouched for a couple of years, until the project became obsolete and was archived and longer used.</description>
+    </item>
+    
+  </channel>
+</rss>
