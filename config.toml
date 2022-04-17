@@ -1,43 +1,51 @@
 languageCode = "en"
 title = "Stanislav Myachenkov"
-theme = "hugo-kiera"
+theme = "PaperMod"
 baseURL = 'https://smyachenkov.com/'
 googleAnalytics = "UA-136218929-1"
 enableRobotsTXT = true
 enableEmoji = true
 disqusShortname = "smyachenkov"
-showShareIcons = true
 enableGitInfo = false
-paginate = 5
-summaryLength = 30
 CommentAutoload = true
 
-pygmentsstyle = "dracula"
-pygmentsuseclasses = false
-pygmentscodefences = true
-pygmentscodefencesguesssyntax = true
-
-[author]
-    name = "Stanislav Myachenkov"
-    github = "smyachenkov"
-    linkedin = "stanislav-myachenkov"
-    instagram = "s.myachenkov" 
-    email = "mailto:s.myachenkov@gmail.com"
-    telegram = "smyachenkov"
-
-# https://gohugo.io/news/0.60.0-relnotes/
-[markup]
-  [markup.goldmark]
-    [markup.goldmark.renderer]
-      unsafe = true
-
 [params]
-  tagline = "Notes about programming and dev culture."
   featherIconsCDN = true
   mode = "auto"
   disableDisqusTypes = ["page"]
-  customCSS  = ["css/links.css"]
-  customDarkCSS = ["css/links-dark.css"]
+
+  ShowReadingTime = true
+  ShowShareButtons = true
+  # ShowToc = true
+  # TocOpen = false
+  # ShowBreadCrumbs = true
+  ShowPostNavLinks = true
+
+
+  [params.homeInfoParams]
+    Title= "Not only coding"
+    Content = "Notes about programming, career, and engineering culture."
+
+    [[params.socialIcons]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/in/stanislav-myachenkov/"
+
+    [[params.socialIcons]]
+    name = "github"
+    url = "https://github.com/smyachenkov"
+
+    [[params.socialIcons]]
+    name = "email"
+    url = "mailto:s.myachenkov@gmail.com"
+
+    [[params.socialIcons]]
+    name = "telegram"
+    url = "https://t.me/smyachenkov"
+
+    [[params.socialIcons]]
+    name = "instagram"
+    url = "https://instagram.com/s.myachenkov/"
+
 
 [taxonomies]
   tag = "tags"
@@ -48,11 +56,6 @@ name = "Posts"
 url = "/"
 weight = 1
 
-#[[menu.main]]
-#name = "All posts"
-#url = "/posts"
-#weight = 2
-
 [[menu.main]]
 name = "Tags"
 url = "/tags"
@@ -62,3 +65,8 @@ weight = 2
 name = "About"
 url = "/about"
 weight = 3
+
+[[menu.main]]
+url = "/index.xml"
+name = "RSS Feed"
+weight = 4
