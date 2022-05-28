@@ -1,5 +1,5 @@
 ---
-title: "SWE Interview: Meta Post" 
+title: "Software Engineer Interview: Meta Post" 
 date: 2022-05-28T16:00:00+03:00
 draft: false
 tags: [interview, coding]
