@@ -11,6 +11,7 @@ During 2020-2022 I actively searched for my next career step, and I went through
 There will be multiple parts focused on different types of interviews. In this post, I will link them all for faster navigation.
 
 1. Coding: https://smyachenkov.com/posts/swe-interview-p1-coding/.
-2. ...
+2. Take-home assignment: https://smyachenkov.com/posts/swe-interview-p2-take-home-assignment/.
+3. ...
 
 Stay tuned.
