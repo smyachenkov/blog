@@ -5,7 +5,7 @@ draft: false
 tags: [book]
 ---
 
-**Software Architecture: The Hard Parts: Modern Trade-Off Analyses for Distributed Architectures is written by** Pramod Sadalage, Mark Richards, Neal Ford, and Zhamak Dehghani and published on 23 September 2021 by O'Reilly Media.
+**Software Architecture: The Hard Parts: Modern Trade-Off Analyses for Distributed Architectures** is written by Pramod Sadalage, Mark Richards, Neal Ford, and Zhamak Dehghani and published on 23 September 2021 by O'Reilly Media.
 
 ![cover](/images/13-book-review-software-architecture-the-hard-parts/cover.jpg#center)
 
@@ -48,6 +48,6 @@ The book is very focused on enterprise-web services. If you are looking for univ
 Finally, I would love to see more real-life examples and ideally — retrospectives. The authors use *Sysops SAGA* narrative as a continuous story that uses acquired knowledge and evolves. It helps to add to ground abstract design schemas to reality if the reader doesn't have a similar experience, but sometimes it feels a little forced and artificial.
 
 # Who Will Find It Useful
-- Developers who work with large distributed and multi-module systems
+- Developers who work with large distributed and multi-module systems.
 - Developers who work with projects with a long history, large codebase, and complex architecture.
 - Developers/Architects/Analysts starting large-scale refactoring of the live system and looking for design patterns, refactoring practices, and tradeoff analysis templates.
