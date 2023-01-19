@@ -27,9 +27,9 @@ It contains useful terms and concepts in one place, making it a great resource f
 
 It provides both perspectives on coupling and decoupling without bias towards either and an extensive list of tradeoffs for both. It follows a practical approach, for example - not advocating for puristic domain data division when it would result in extra communication overhead and unnecessary complexity.
 
-Introduction of composition and decomposition drivers: tradeoffs that pull together and apart parts of the system into modules/apps/services. They are a very practical and visual way of demonstrating architectural direction.
+It introduces concept of composition and decomposition drivers: tradeoffs that pull together and apart parts of the system into modules/apps/services. They are a very practical and visual way of demonstrating architectural direction.
 
-The real-life appliance of static analysis metrics for architecture decisions. Usually, things like cyclomatic complexity and code distance stay just a warning in the SonarQube report that needs to be fixed for the sake of a clean report. Here authors demonstrate how to apply this data for module decomposition or integration.
+It demonstrates real-life appliance of static analysis metrics for architecture decisions. Usually, things like cyclomatic complexity and code distance stay just a warning in the SonarQube report that needs to be fixed for the sake of a clean report. Here authors demonstrate how to apply this data for module decomposition or integration.
 
 It dives deep into Saga pattern implementation details and describes different types of sagas design, and when all of them can be useful.
 
