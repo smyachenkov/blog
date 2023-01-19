@@ -1,5 +1,5 @@
 ---
-title: "Book review. Software Architecture: The Hard Parts: Modern Trade-Off Analyses for Distributed Architectures"
+title: "[Book review] Software Architecture: The Hard Parts: Modern Trade-Off Analyses for Distributed Architectures"
 date: 2023-01-15T00:00:00+08:00  
 draft: false  
 tags: [book]
