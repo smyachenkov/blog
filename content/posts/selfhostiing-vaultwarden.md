@@ -2,7 +2,7 @@
 title: "Selfhosting Vaultwarden Password Manager"
 date: 2023-02-26T00:00:00+08:00  
 draft: false
-tags: [interview, coding]
+tags: []
 ---
 
 I used 1Password as a password manager. I decided to switch to a self-hosted solution.
