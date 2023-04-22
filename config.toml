@@ -21,30 +21,29 @@ CommentAutoload = true
   # ShowBreadCrumbs = true
   ShowPostNavLinks = true
 
-
   [params.homeInfoParams]
-    Title= "Not only coding"
-    Content = "Notes about programming, career, and engineering culture."
+  Title= "Not only coding"
+  Content = "Notes about programming, career, and engineering culture."
 
-    [[params.socialIcons]]
-    name = "linkedin"
-    url = "https://www.linkedin.com/in/stanislav-myachenkov/"
+  [[params.socialIcons]]
+  name = "linkedin"
+  url = "https://www.linkedin.com/in/stanislav-myachenkov/"
 
-    [[params.socialIcons]]
-    name = "github"
-    url = "https://github.com/smyachenkov"
+  [[params.socialIcons]]
+  name = "github"
+  url = "https://github.com/smyachenkov"
 
-    [[params.socialIcons]]
-    name = "email"
-    url = "mailto:s.myachenkov@gmail.com"
+  [[params.socialIcons]]
+  name = "email"
+  url = "mailto:s.myachenkov@gmail.com"
 
-    [[params.socialIcons]]
-    name = "telegram"
-    url = "https://t.me/smyachenkov"
+  [[params.socialIcons]]
+  name = "telegram"
+  url = "https://t.me/smyachenkov"
 
-    [[params.socialIcons]]
-    name = "instagram"
-    url = "https://instagram.com/s.myachenkov/"
+  [[params.socialIcons]]
+  name = "instagram"
+  url = "https://instagram.com/s.myachenkov/"
 
 
 [taxonomies]
@@ -52,21 +51,26 @@ CommentAutoload = true
 
 # Header Menu
 [[menu.main]]
-name = "Posts"
-url = "/"
+name = "Blog"
+url = "/posts"
 weight = 1
+
+[[menu.main]]
+name = "Singapore"
+url = "/posts/this-is-singapore"
+weight = 2
 
 [[menu.main]]
 name = "Tags"
 url = "/tags"
-weight = 2
+weight = 3
 
 [[menu.main]]
 name = "About"
 url = "/about"
-weight = 3
+weight = 4
 
 [[menu.main]]
 url = "/index.xml"
 name = "RSS Feed"
-weight = 4
+weight = 5
