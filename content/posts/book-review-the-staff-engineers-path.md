@@ -18,7 +18,7 @@ tags: [book]
 > You build credibility every time you take on a chaotic situation and make it easier for everyone else to understand.
 > 
 
-> Know why the problem you’re working on is strategically important, and if it’s not, do something else.
+> Know why the problem you’re working on is strategically important, and if it’s not, do something else.
 > 
 
 > Whenever there's a feeling of “someone should do something here”, there s a reasonable chance that this someone is you.
