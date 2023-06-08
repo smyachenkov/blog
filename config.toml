@@ -19,7 +19,9 @@ CommentAutoload = true
   # ShowToc = true
   # TocOpen = false
   # ShowBreadCrumbs = true
-  ShowPostNavLinks = true
+
+  # Disable prev and next buttons to avoid jumps between subblogs
+  ShowPostNavLinks = false
 
   [params.homeInfoParams]
   Title= "Not only coding"
