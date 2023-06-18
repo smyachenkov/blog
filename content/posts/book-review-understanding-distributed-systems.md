@@ -12,7 +12,7 @@ tags: [book]
 
 # Structure
 
-Broad coverage of approaches and technologies of distributed systems. It leans more towards a practical side with a noticeable focus on troubleshooting, error handling, and resilience with a focus on web technologies.
+The book aims for the broad coverage of approaches and technologies of distributed systems. It leans more towards a practical side with a noticeable focus on troubleshooting, error handling, and resilience with a focus on web technologies.
 
 There are five main parts: 
 
