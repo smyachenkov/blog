@@ -4,6 +4,7 @@ date: 2023-18-01T00:00:00+08:00
 draft: false  
 tags: [book]
 weight: 1
+summary: "Meta post for book reviews"
 ---
 
 Meta post for book reviews.
