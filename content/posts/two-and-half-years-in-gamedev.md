@@ -200,7 +200,7 @@ Which leads directly to another interesting phenomenon...
 
 ## VI. Releasing a Game is Part of the Biography
 
-> Hi, my name is Mike, I'm a game developer, and I've worked on Truck Drug Simulator 2, and it's spin-off Dark Trucks: Shadows, excited to meet you!
+> Hi, my name is Mike, I'm a game developer, and I've worked on Truck Simulator 2, and it's spin-off Dark Trucks: Shadows, excited to meet you!
 
 — a totally realistic introduction I've heard many times during team onboardings and interviews
 
