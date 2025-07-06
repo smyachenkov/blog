@@ -262,7 +262,7 @@ Second can be a lack of testing tooling. More experienced folks here might point
 
 I'm not even starting on in-house engines. Those things can vary so much and their tooling can be in any state, from state-of-the art masterpiece to mash of ideas a working together by a pure miracle, and unsurprisingly, it often leans towards the second one.
 
-I heard from an acquittance who worked in a mobile puzzle games company (match-3, hidden-object, that kind) that they relatively successfully leveraged AI for testing their games, and it worked well due to a more limited scope of the game.
+I heard from an acquaintance who worked in a mobile puzzle games company (match-3, hidden-object, that kind) that they relatively successfully leveraged AI for testing their games, and it worked well due to a more limited scope of the game.
 
 **Hardware & Platforms**
 
