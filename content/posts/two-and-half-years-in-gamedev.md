@@ -35,11 +35,6 @@ In most other industries with big IT and development departments it is perfectly
 
 At my new job, I saw people who really allocated their time to play new games, preorder ultimate editions of fresh titles, schedule PTOs around big releases, and take time to talk about games. It was impossible  not to know what was happening in the industry or in the games we were making — all news, controversies, and leaks were thoroughly discussed in casual conversations, chats, and offtopic channels.
 
-<!--
-// todo meme
-// opt1: 2 buttons - “Maintain healthy professional distance from work” “Buy Ultimate Edition for research”
--->
-
 There was a period of time when I stopped following the industry news and playing games myself. But I'm pretty confident that I did not miss anything — just standing near the coffee
 machine was more than enough to know if the latest DLC for a popular game is good or a total flop. 
 
@@ -86,12 +81,6 @@ Timing wasn't helping the situation much, as my presentation was one of the last
 
 After I talked through my slides, there was a pin-drop silence, followed by a question from the host "Is that it? ... Cool!".  I wanted to close my laptop, leave the building and go straight to the airport.
 
-<!--
-// todo: picture with comparison - make it a meme
-// opt1: This is Fine  - Dog labeled: _“Me presenting 3 slides of UML diagrams”_ Flames labeled: _“Memes, characters twerking, bug-hunting roleplay”
-// todo follow-up talked with manager about it and we started bundling creative and technical parts into one thing so it would receive more visual and presentational appeal - think about
--->
-
 We had a good laugh about with my manager later.
 
 **Creative Roles Careers**
@@ -106,15 +95,6 @@ En masse, a purely artistic IC role in GameDev is quite often underpaid. The ind
 
 There’s a popular career tip: when you join a new company, figure out what people are getting promoted for. During my time here, standout promotions and career breakthroughs were often tied to creative wins: a surprisingly successful cosmetic item or a new skin line that went viral. After some thought, I believe that these kinds of successes don’t fit cleanly into the usual “product” or “tech” success definitions of the traditional industries. They belong in their own category, a creative track that’s deeply aligned with the core of game development and it's creative values.
 
-
-<!--
-// todo Story - how people dress and how i started wearing trousers and shirts
-
-// todo As result - dissatisfaction with big corp
-
-// todo Subquestion: Are video games art?
--->
-
 ## III. High Creativity Scope Expectations 
 
 Being passionate about something is a double-edged sword. If you truly believe in your work, it can greatly elevate your experience, and for many it's a crucial part of professional life. On the other hand, many people struggle to stay passionate about being creative within tight constraints.
@@ -125,16 +105,7 @@ It’s an extremely common story, when someone with lots of experience, maybe ev
 
 Now multiply that feeling by 20 for people in creative industries, who must work within the tightly defined and specific context of a game and its established style. Many expect to design new systems from scratch, drive art direction, and be praised for breakthroughs. But in large organizations, it’s pretty much expected that you’ll be pigeonholed into a narrow area. Very few dream of working on the 50th swipe animation in a match-3 game or arranging the layout of a store in yet another gacha.
 
-<!-- 
-// todo meme:
-// are you winning dad with match-3 or animations
--->
 A very common trajectory of a creative IC I've repeatedly seen, even during my relatively short tenure, is a quick change from the excitement of joining a team with a popular game to frustration with the limited creative scope, further narrowed by corporate politics and stack of management. In the end, it was often the reason that motivated people to leave for smaller studios or their own indie projects where they have full creative freedom.
-
-<!-- todo meme
-// opt are you winning dad  “No. But I’m finally making the pixel art roguelike platformer I actually care about.”
-// opt sponge bob daring today arent when fish says - i quit a big company to make a pixel rougelike depression metroidvania with dodge mechanics
--->
 
 I was primarily talking about artistic craft in this section because, in my experience, that’s where this issue is most visible. But it would be unfair to not mention tech and development. From my experience, this is a significantly smaller issue for developers and the technical side of things, because there are still many small and large unsolved challenges that one person can take on, especially given the immaturity of tools and the complexity of technical systems. And in tech, creativity is valued more as a force multiplier, rather than as a primary driver.
 
@@ -149,24 +120,12 @@ For years, video games flew under the radar, pulling off things that more regula
 Even owning the game is a gray area today, when most of the platforms allow you only to get a license to play a game, or worse — a license to rent in-game items. Even physical copies can't protect you from servers going dark and blocking you from accessing your game progression and collections.
 
 Yet despite those shenanigans, the industry's growth has been steady, positive, and relentless.
-<!--
-// todo graph for market cap and amount of people/games
--->
-
-<!--
-// meme: how  it started how its going:  oblivion horse armor and modern game dlcs, like genshin
--->
 
 **Disconnected Between Internal and External Growths**  
 
 Having this image creates an interesting conflict, that I felt sometimes is hard to get a grasp on for people who have been working in GameDev exclusively. Despite being a full-fledged industry by economic metrics, both internally and in the eyes of the general public, GameDev is often seen as a creative space without rigid rules or bureaucracy.
 
 I worked at a large company by GameDev standards: several thousand employees, multiple international offices. And I’d routinely see teams actively rejecting exiting practices for managing large-scale projects and work. I often felt like saying: “Guys, we’re not working out of someone’s garage anymore.”
-
-<!--
-// todo example - creating own independent parts of the games for multiple months? the one with devices for mobile game. Rephrase it for something like creating game mode demo without approve.
-// todo skip the example
--->
 
 At first, I thought I was the problem. I thought that I needed to adjust, and that the friction I felt was a sign of immaturity on my part. But over time, I connected with few people who had been there for a long time and had previously built successful careers in other industries before moving into GameDev. And they independently echoed exactly the same experience and emotions from their side after working on different projects and teams over their time in the company.
  
