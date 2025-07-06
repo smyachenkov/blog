@@ -80,7 +80,7 @@ I was working on a new project, and successfully delivered a first version of a 
 
 Things started to feel weird as the all-hands began. I saw that all other presenters created a proper shows out of their short presentations. There were memes, music, storytelling. I kid you not, people were telling the whole stories from the perspective of a fictional in-game character that encountered a bug or performance issue like it was a plot arc, and fought alongside with developer to defeat new type of enemies to get to the core of the bug and help developer to fix it. It was wild.
 
-And my presentation had black and white UML diagrams.
+And my presentation had black-and-white UML diagrams.
 
 Timing wasn't helping the situation much, as my presentation was one of the last one. The more memes I watched, the more I dreaded my 2 minutes of air time. Presentation of a guy before me had a game character twerking over a hip hop beat. How can you beat that?
 
