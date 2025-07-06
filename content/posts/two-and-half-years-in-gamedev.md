@@ -236,9 +236,9 @@ There's a whole speciality that is commonly referred to as tech-art. It's an umb
 
 More specifically, it can include such things as shader programming, particle systems, model rigging, ray tracing, 3D texturing, performance optimization of visual part of the game, and fitting all those things into memory budgets.
 
-There are  interesting challenges and there is a lot of very specific skills and knowledge involved. During my last year I was often having lunches with a tech art team, and conversations with those folks were making me feel like 1 semester of 3D graphics in uni 10 years ago was definitely not enough to understand finer details of their work.
+There are interesting challenges and there is a lot of very specific skills and knowledge involved. During my last year I was often having lunches with a tech art team, and conversations with those folks were making me feel like 1 semester of 3D graphics in uni 10 years ago was definitely not enough to understand finer details of their work.
 
-The only other industry where this area of expertise is relevant and valuable is movies & entertainment
+This area of expertise is also highly valuable in the movie and entertainment industries, and to some extent in others, where 3D visualization is a first-class feature, though game development is where it gets the most external visibility.
 
 **Content Tools and Pipelines**
 
