@@ -76,7 +76,7 @@ Confession: I’m not a very creative person. I never learned how to draw, not e
 
 My favourite story about this contrast is my first presentation at a game team all-hands.
 
-I was working on a new project, and successfully delivered a first version of new piece of payments integration. Sound boring, but it took me a couple of months to get alignment with multiple teams across multiple timezones, put the wheels in motion, and unblock a lot of further work for th next year, so I felt rather confident in my achievements. My presentation was fairly simple: 3–4 slides on a light-grey background with a few architecture diagrams, some graphs, and a couple of key metrics.
+I was working on a new project, and successfully delivered a first version of a new piece of payments integration. Sounds boring, but it took me a couple of months to get alignment with multiple teams across multiple timezones, put the wheels in motion, and unblock a lot of further work for the next year, so I felt rather confident in my achievements. My presentation was fairly simple: 3–4 slides on a light-grey background with a few architecture diagrams, some graphs, and a couple of key metrics.
 
 Things started to feel weird as the all-hands began. I saw that all other presenters created a proper shows out of their short presentations. There were memes, music, storytelling. I kid you not, people were telling the whole stories from the perspective of a fictional in-game character that encountered a bug or performance issue like it was a plot arc, and fought alongside with developer to defeat new type of enemies to get to the core of the bug and help developer to fix it. It was wild.
 
